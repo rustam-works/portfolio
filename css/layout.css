@@ -1,0 +1,766 @@
+.ids__space {
+  height: calc(var(--ids__density) * 0.7em);
+
+  &.S {
+    height: calc(var(--ids__density) * 0.7em);
+  }
+
+  &.M {
+    height: calc(var(--ids__density) * 1.4em);
+  }
+
+  &.L {
+    height: calc(var(--ids__density) * 2.4em);
+  }
+
+  &.XL {
+    height: calc(var(--ids__density) * 4em);
+  }
+}
+
+.ids__wrapper {
+  position: relative;
+  width: 90%;
+  margin: 0 auto;
+  max-width: 1920px;
+
+  @media (width < 767px) {
+    width: 100%;
+    padding: 0 calc(var(--ids__density) * 0.6em);
+  }
+
+  &.L {
+    width: 90%;
+
+    @media (width < 767px) {
+      width: 100%;
+      padding: 0 calc(var(--ids__density) * 0.6em);
+    }
+  }
+
+  &.XL {
+    width: 100%;
+    padding: 0 calc(var(--ids__density) * 0.75em);
+
+    @media (width < 767px) {
+      padding: 0 calc(var(--ids__density) * 0.6em);
+    }
+  }
+
+  &.XXL {
+    width: 100%;
+
+    @media (width < 767px) {
+      padding: 0;
+    }
+  }
+
+  & .ids__text-width {
+    width: 85%;
+
+    @media (width < 767px) {
+      width: 100%;
+    }
+  }
+}
+
+.ids__sequence {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: calc(var(--ids__density) * 0.4em);
+  --gap: 0em;
+  gap: var(--gap);
+
+  &.no-margin {
+    margin-bottom: 0;
+  }
+
+  &.overlap {
+    .ids__sequence-item {
+      margin-right: -0.5px;
+      margin-bottom: -0.5px;
+      width: calc((100% - var(--gap) * (var(--columns) - 1)) / var(--columns) + 0.5px);
+    }
+  }
+
+  &.gap-L {
+    --gap: 1.5em;
+    margin-bottom: calc(var(--gap) * 1.5);
+  }
+
+  &.gap-M {
+    --gap: 1em;
+    margin-bottom: calc(var(--gap) * 1.5);
+  }
+
+  &.gap-S {
+    --gap: 0.5em;
+    margin-bottom: calc(var(--gap) * 1.5);
+  }
+
+  .ids__sequence-item {
+    --columns: 4;
+    width: calc((100% - var(--gap) * (var(--columns) - 1)) / var(--columns));
+
+    @media (width < 767px) {
+      --columns: 2;
+    }
+  }
+
+  &.XL {
+    .ids__sequence-item {
+      --columns: 2;
+
+      @media (width < 767px) {
+        --columns: 1;
+      }
+    }
+  }
+
+  &.L {
+    .ids__sequence-item {
+      --columns: 3;
+
+      @media (width < 767px) {
+        --columns: 2;
+      }
+    }
+  }
+
+  &.S {
+    .ids__sequence-item {
+      --columns: 6;
+
+      @media (width < 767px) {
+        --columns: 3;
+      }
+    }
+  }
+}
+
+.ids__rounded {
+  border-radius: var(--ids__radius);
+  corner-shape: squircle;
+  overflow: hidden;
+}
+
+@supports not (corner-shape: squircle) {
+  .ids__rounded {
+    border-radius: 0;
+    border-radius: initial;
+    mask:
+      url('data:image/svg+xml;utf-8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><path d="m0,1 c0,-1 0,-1 1,-1 l99,0 l0,100 l-100,0 Z"/></svg>') top left / calc(var(--ids__radius) * 100) no-repeat intersect,
+      url('data:image/svg+xml;utf-8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><path d="m0,0 l99,0 c1,0 1,0 1,1 l0,99 l-100,0 l0,-100 Z"/></svg>') top right / calc(var(--ids__radius) * 100) no-repeat intersect,
+      url('data:image/svg+xml;utf-8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><path d="m0,0 l100,0 l0,99 c0,1 -0,1 -1,1 l-99,0 Z"/></svg>') bottom right / calc(var(--ids__radius) * 100) no-repeat intersect,
+      url('data:image/svg+xml;utf-8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><path d="m0,0 l100,0 l0,100 l-99,0 c-1,0 -1,-0 -1,-1 Z"/></svg>') bottom left / calc(var(--ids__radius) * 100) no-repeat intersect;
+  }
+}
+
+header,
+footer {
+  padding: calc(var(--ids__density) * 1em);
+}
+
+/* Hero Section */
+/* Styles moved to ids.css as .ids__text-constrained and .ids__text-meta */
+
+/* Media Utilities */
+/* Style moved to ids.css as .ids__media-full */
+
+/* Case Study Layout */
+.case-study__grid {
+  display: flex;
+  gap: 2em;
+  align-items: flex-start;
+}
+
+.case-study__title {
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.case-study__description {
+  flex: 1;
+  max-width: 600px;
+  padding-top: 0.5%;
+}
+
+/* Case Study Row (Simurgh + Dodo) */
+.case-study-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8%;
+  /* Large gap between blocks */
+  width: 100%;
+}
+
+.case-study-item {
+  width: 46%;
+  /* 100% - 8% gap / 2 */
+  display: flex;
+  align-items: flex-start;
+  /* Align text top with image top */
+  gap: 1.5em;
+  /* Smaller gap between image and text */
+}
+
+/* Goethe Case Study */
+/* .goethe-case uses .case-study-item properties */
+
+.goethe-case__container {
+  width: 60%;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.goethe-case__bezel {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: auto;
+  display: block;
+  pointer-events: none;
+}
+
+.goethe-case__video {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 93%;
+  height: auto;
+  border-radius: 12px;
+}
+
+.goethe-case__text {
+  flex: 1;
+  min-width: 0;
+  /* Prevent text overflow issues */
+  margin-top: 0;
+}
+
+.mobile-only {
+  display: none;
+}
+
+/* Dodo Finance Case Study */
+/* .dodo-case uses .case-study-item properties */
+
+.dodo-case__image {
+  width: 60%;
+  height: auto;
+  flex-shrink: 0;
+  margin: -5%;
+  /* Compensate for PNG whitespace */
+}
+
+.dodo-case__text {
+  flex: 1;
+  min-width: 0;
+  margin-top: 0;
+}
+
+@media (max-width: 1024px) {
+  .case-study-row {
+    gap: 4%;
+  }
+
+  /* Specific fix for Dodo header width */
+  .dodo-case__text h4 {
+    max-width: 200px;
+  }
+}
+
+/* Sticky CTA */
+/* Sticky CTA */
+.ids__cta {
+  position: fixed;
+  top: 1.5em;
+  right: 1.5em;
+  z-index: 999;
+  background-color: #EFEFEF;
+  /* Light gray surface */
+  color: #050505 !important;
+  /* Black text, forced to override IDS link color */
+  padding: 0.8em 1.2em;
+  border-radius: var(--ids__radius);
+  text-decoration: none !important;
+  /* Force override of IDS underline */
+  font-weight: 500;
+  transition: all 0.2s ease;
+  mix-blend-mode: normal;
+  border: none;
+  white-space: nowrap;
+}
+
+.ids__cta:hover {
+  background-color: #050505;
+  /* Black background */
+  color: #EFEFEF !important;
+  /* Light gray text */
+  text-decoration: none !important;
+  filter: none;
+  /* Remove previous invert */
+}
+
+.ids__cta:active {
+  color: #FFFFFF !important;
+  /* White text on press */
+}
+
+@media (max-width: 767px) {
+  .ids__cta {
+    top: auto;
+    right: auto;
+    bottom: 1.5em;
+    left: 50%;
+    transform: translateX(-50%);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Smaller titles on mobile for big cases */
+  .ids .case-study__title,
+  .ids .case-study-item h3,
+  .ids .case-study-item h4 {
+    font-size: 1.0em;
+    /* Reduced as requested */
+    line-height: 1.2;
+  }
+
+  .case-study-item {
+    width: 48%;
+    flex-direction: column;
+    /* Stack image/text inside block on tablets? */
+    gap: 1em;
+  }
+
+  .goethe-case__container,
+  .dodo-case__image {
+    margin: auto;
+    width: 100%;
+  }
+
+  .dodo-case__image {
+    margin-bottom: -3.5em;
+  }
+}
+
+@media (max-width: 767px) {
+  .case-study-row {
+    flex-direction: column;
+    gap: 3em;
+  }
+
+  .case-study-item {
+    width: 100%;
+    flex-direction: row;
+    /* Keep side-by-side on mobile?? Or stack? User didn't specify, standard stack is safer for small screens */
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0em;
+  }
+
+  .goethe-case__container {
+    width: 100%;
+  }
+
+  .dodo-case__image {
+    width: 100%;
+  }
+
+  .mobile-only {
+    display: block;
+  }
+}
+
+/* Wolfram Case Study */
+.wolfram-case {
+  position: relative;
+  width: 100%;
+}
+
+.wolfram-spreads {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  gap: 1%;
+}
+
+.wolfram-spreads img {
+  width: 60%;
+  height: auto;
+  display: block;
+}
+
+.wolfram-lettering {
+  width: 100%;
+  height: auto;
+  display: block;
+  position: relative;
+  z-index: 2;
+  /* Ensure it overlaps spreads */
+  margin-top: -5%;
+  /* Negative overlap */
+}
+
+/* Reusing .case-study__grid for text, no extra styles needed */
+
+@media (max-width: 767px) {
+  .wolfram-spreads {
+    flex-direction: column;
+    gap: .5em;
+  }
+
+  .wolfram-spreads img {
+    width: 100%;
+  }
+
+  .wolfram-lettering {
+    width: 100%;
+    /* Keep full width or scale up/down? */
+    margin-top: -7%;
+    /* More overlap on mobile since stacking makes it taller/narrower flow? logic: overlap relative to width */
+  }
+}
+
+/* Dodo Deck Case Study */
+.dodo-deck-case {
+  width: 100%;
+}
+
+.dodo-deck-visuals {
+  background: linear-gradient(0deg, rgba(255, 105, 0, 1) 0%, rgba(244, 245, 246, 1) 93%);
+  /* Light gray container */
+  padding: 0.5em;
+  /* Container padding */
+  border-radius: var(--ids__radius);
+  /* Standard container rounding */
+  box-sizing: border-box;
+}
+
+.dodo-deck-tool {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 0.3em;
+  /* Minor rounding for slides */
+}
+
+.dodo-deck-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25em;
+  /* Tighter vertical gap */
+}
+
+.dodo-deck-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.25em;
+  /* Tighter horizontal gap */
+}
+
+.dodo-deck-img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 0.5em;
+  /* Small consistent rounding */
+}
+
+/* Row 1: 50/50 split */
+.dodo-deck-row>.dodo-deck-img {
+  flex: 1;
+  /* Auto-width */
+  width: auto;
+  min-width: 0;
+  /* Fix for overflow */
+}
+
+/* Row 2 Groups */
+.dodo-deck-group-left {
+  flex: 4;
+  /* Visual approximation of 80% */
+  display: flex;
+  justify-content: space-between;
+  gap: 0.25em;
+  /* Tighter gap */
+  min-width: 0;
+  /* Fix for overflow */
+}
+
+.dodo-deck-group-left .dodo-deck-img {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+  /* Fix for overflow */
+}
+
+.dodo-deck-group-right {
+  flex: 1;
+  /* Visual approximation of 20% */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.25em;
+  /* Tighter internal gap */
+  min-width: 0;
+  /* Fix for overflow */
+}
+
+.dodo-deck-group-right .dodo-deck-img {
+  width: 100%;
+}
+
+@media (max-width: 767px) {
+  .dodo-deck-row {
+    flex-direction: column;
+    gap: 0.5em;
+  }
+
+  .dodo-deck-row>.dodo-deck-img {
+    width: 100%;
+  }
+
+  .dodo-deck-group-left,
+  .dodo-deck-group-right {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5em;
+  }
+
+  .dodo-deck-group-left .dodo-deck-img,
+  .dodo-deck-group-right .dodo-deck-img {
+    width: 100%;
+  }
+}
+
+/* Edadeal Case Study */
+.edadeal-case {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.edadeal-character {
+  width: 41.7%;
+  height: auto;
+  position: relative;
+  z-index: 2;
+}
+
+.edadeal-all {
+  width: 60.3%;
+  height: auto;
+  margin-left: -2%;
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 767px) {
+  .edadeal-case {
+    flex-direction: column;
+  }
+
+  .edadeal-character {
+    width: 80%;
+    height: auto;
+    margin-bottom: 1em;
+  }
+
+  .edadeal-all {
+    width: 100%;
+    height: auto;
+    margin-left: 0;
+  }
+}
+
+/* IPAK v2 Case Study */
+.ipak-v2-case {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  background-color: #D4DED9;
+}
+
+.ipak-v2-l {
+  flex-grow: 10000;
+  flex-basis: 0;
+  min-width: 0;
+  height: auto;
+  object-fit: cover;
+  display: block;
+  position: relative;
+  z-index: 2;
+}
+
+.ipak-v2-middle {
+  flex-grow: 4878;
+  flex-basis: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 1;
+}
+
+.ipak-v2-grid-top {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+
+.ipak-v2-grid-top img,
+.ipak-v2-grid-top video {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.ipak-v2-grid-bottom {
+  width: 100%;
+  height: auto;
+  display: block;
+  flex-grow: 1;
+  object-fit: cover;
+  position: relative;
+  z-index: 0;
+}
+
+.ipak-v2-r {
+  flex-grow: 8539;
+  flex-basis: 0;
+  min-width: 0;
+  height: auto;
+  object-fit: cover;
+  display: block;
+  position: relative;
+  z-index: 0;
+}
+
+@media (max-width: 767px) {
+  .ipak-v2-case {
+    flex-direction: column;
+  }
+
+  .ipak-v2-l,
+  .ipak-v2-middle,
+  .ipak-v2-r {
+    width: 100%;
+    margin-right: 0;
+  }
+
+  .ipak-v2-grid-bottom {
+    order: -1;
+  }
+}
+
+/* EcoChef Case Study */
+.ecochef-case {
+  display: flex;
+  width: 100%;
+  background-color: #f2f2f2;
+  /* Light gray box background */
+  overflow: hidden;
+  /* Ensures rounded corners clip content */
+  align-items: flex-start;
+  /* Align top edges */
+  justify-content: space-between;
+  /* Distribute any rounding error space */
+}
+
+/* 
+  Calculated widths for equal height (1164px original height for all):
+  Logo: 34.57%
+  Box: 18.92%
+  Van: 24.61%
+  Salad: 21.90%
+*/
+.ecochef-logo {
+  width: 34.57%;
+  height: auto;
+  display: block;
+}
+
+.ecochef-box {
+  width: 18.92%;
+  height: auto;
+  display: block;
+}
+
+.ecochef-van {
+  width: 24.61%;
+  height: auto;
+  display: block;
+}
+
+.ecochef-salad {
+  width: 21.90%;
+  height: auto;
+  display: block;
+}
+
+@media (max-width: 767px) {
+  .ecochef-case {
+    flex-wrap: wrap;
+    justify-content: space-between;
+    /* Ensure outer edges hit */
+    padding: 0;
+    /* Flush fit */
+    box-sizing: border-box;
+  }
+
+  /* Row 1: Logo + Box */
+  .ecochef-logo {
+    width: 64.62%;
+    margin-bottom: 0;
+  }
+
+  .ecochef-box {
+    width: 35.38%;
+    margin-bottom: 0;
+  }
+
+  /* Row 2: Van + Salad */
+  .ecochef-van {
+    width: 52.91%;
+    margin-bottom: 0;
+  }
+
+  .ecochef-salad {
+    width: 47.09%;
+    margin-bottom: 0;
+  }
+}
+
+/* Kvass Case Study */
+.kvass-case {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  background-color: #f2f2f2;
+  /* Fallback */
+  overflow: hidden;
+  /* Ensures images clip to rounded corners */
+  align-items: flex-start;
+  /* Prevent stretching */
+}
+
+.kvass-top {
+  width: 52%;
+  height: auto;
+  display: block;
+}
+
+.kvass-bottom {
+  width: 48%;
+  height: auto;
+  display: block;
+}
+
+@media (max-width: 767px) {
+  /* Keep same layout on mobile as user didn't specify stack */
+  /* If needed, can stack bottom images here */
+}
