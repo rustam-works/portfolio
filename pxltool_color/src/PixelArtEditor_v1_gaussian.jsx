@@ -484,50 +484,45 @@ const PixelArtEditor = () => {
         });
         if (bridges.length > 0 && r > 0) bridges.forEach(b => pathData += drawBridge(null, b, r, true));
 
-        // IMAGE DATA PASS: Create a tiny image for the color field to match UI blending exactly
-        const tempC = document.createElement('canvas');
-        tempC.width = gridWidth;
-        tempC.height = gridHeight;
-        const tCtx = tempC.getContext('2d');
+        let pixelsSvg = '';
+        const blurRadius = showGradient ? visualPixelWidth * 0.4 : 0; // Matching the roundness/liquid look
 
         // Dilation logic for SVG export: ensure colors bleed to neighbors when gradient is on
+        const dilatedPixels = new Map(pixelMap);
         if (showGradient && !blendBg) {
             pixelMap.forEach((color, key) => {
                 const [x, y] = key.split(',').map(Number);
                 const neighbors = [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]];
                 neighbors.forEach(([nx, ny]) => {
-                    if (!pixelMap.has(`${nx},${ny}`)) {
-                        tCtx.fillStyle = color;
-                        tCtx.fillRect(nx, ny, 1, 1);
+                    if (!dilatedPixels.has(`${nx},${ny}`)) {
+                        dilatedPixels.set(`${nx},${ny}`, color);
                     }
                 });
             });
         }
 
-        pixelMap.forEach((color, key) => {
+        dilatedPixels.forEach((color, key) => {
             const [x, y] = key.split(',').map(Number);
-            tCtx.fillStyle = color;
-            tCtx.fillRect(x, y, 1, 1);
+            pixelsSvg += `<rect x="${x * visualPixelWidth}" y="${y * visualPixelHeight}" width="${visualPixelWidth + 0.5}" height="${visualPixelHeight + 0.5}" fill="${color}" />`;
         });
 
-        const imageDataUri = tempC.toDataURL('image/png');
         const strokeAttr = showStroke ? 'stroke="black" stroke-width="2"' : 'stroke="none"';
+        const filterId = "liquidBlur";
 
         return `
 <svg width="${displayWidth}" height="${displayHeight}" viewBox="0 0 ${displayWidth} ${displayHeight}" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <path id="blob" d="${pathData}" />
     <clipPath id="blobClip"><use href="#blob" /></clipPath>
+    ${showGradient ? `
+    <filter id="${filterId}" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="${blurRadius}" />
+    </filter>` : ''}
   </defs>
   <g clip-path="url(#blobClip)">
-    <image 
-      href="${imageDataUri}" 
-      x="0" y="0" 
-      width="${displayWidth}" 
-      height="${displayHeight}" 
-      preserveAspectRatio="none"
-      style="${showGradient ? '' : 'image-rendering: pixelated;'}"
-    />
+    <g ${showGradient ? `filter="url(#${filterId})"` : ''}>
+      ${pixelsSvg}
+    </g>
   </g>
   <use href="#blob" fill="none" ${strokeAttr} />
 </svg>`.trim();
@@ -594,7 +589,7 @@ const PixelArtEditor = () => {
             </div>
 
             <div className="w-full max-w-sm flex flex-col gap-5 pt-2">
-                <div className="bg-white p-5 rounded-xl border border-gray-200">
+                <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-lg">
                     <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Tools</h3>
 
                     {/* Improved Color Picker */}
@@ -660,7 +655,7 @@ const PixelArtEditor = () => {
                     <button onClick={clearCanvas} className="w-full py-2 text-sm rounded border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-black transition flex items-center justify-center gap-2"><Trash2 size={16} /> Clear Canvas</button>
                 </div>
 
-                <div className="bg-white p-5 rounded-xl border border-gray-200">
+                <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-lg">
                     <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Smoothing</h3>
                     <div className="grid grid-cols-3 gap-2 mb-6">
                         {['random', 'outer', 'inner'].map(mode => (
@@ -683,7 +678,7 @@ const PixelArtEditor = () => {
                 <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-lg">
                     <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Export</h3>
                     <div className="flex gap-2">
-                        <input type="text" value={fileName} onChange={(e) => setFileName(e.target.value)} className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md bg-white focus:ring-1 focus:ring-black focus:border-black outline-none" placeholder="filename" />
+                        <input type="text" value={fileName} onChange={(e) => setFileName(e.target.value)} className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-black focus:border-black outline-none" placeholder="filename" />
                         <button onClick={exportSVG} className="px-4 py-2 rounded-lg bg-black text-white hover:bg-gray-800 transition flex items-center justify-center gap-2 text-sm font-semibold"><FileCode size={18} /> Download SVG</button>
                     </div>
                 </div>
