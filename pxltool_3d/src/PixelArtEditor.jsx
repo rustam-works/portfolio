@@ -377,7 +377,7 @@ const PixelArtEditor = () => {
     };
 
     const handlePointerMove = (e) => {
-        const { x, y, rect } = getPixelCoords(e.clientX, e.clientY);
+        let { x, y, rect } = getPixelCoords(e.clientX, e.clientY);
         const visualPixelWidth = rect.width / gridWidth;
         const visualPixelHeight = rect.height / gridHeight;
 
