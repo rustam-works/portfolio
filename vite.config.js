@@ -12,6 +12,7 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, 'index.html'),           // Главная (портфолио)
         pxltool: resolve(__dirname, 'pxltool/index.html'), // Инструмент
+        pxltool_3d: resolve(__dirname, 'pxltool_3d/index.html'),
         pxltool_color: resolve(__dirname, 'pxltool_color/index.html'),
         cv: resolve(__dirname, 'cv/index.html'),
         visual_search: resolve(__dirname, 'visual-search/index.html'),

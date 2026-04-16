@@ -1,11 +1,103 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Trash2, RefreshCw, Undo2, Redo2, Settings, Brush, Eraser, FileCode, Maximize, Move } from 'lucide-react';
+import { Trash2, RefreshCw, Undo2, Redo2, FileCode, FileImage, Maximize, Pipette, Plus, Download } from 'lucide-react';
+
+const pseudoRandom = (x, y, s) => {
+    const n = Math.sin(x * 12.9 + y * 78.2 + s * 43758) * 43758;
+    return n - Math.floor(n);
+};
+
+const NumberInput = ({ value, onChange, className, onMouseDown, min, max, displayScale = 1 }) => {
+    const [local, setLocal] = React.useState((value * displayScale).toString());
+    const inputRef = React.useRef(null);
+    React.useEffect(() => {
+        if (document.activeElement !== inputRef.current) {
+            setLocal((value * displayScale).toString());
+        }
+    }, [value, displayScale]);
+
+    return (
+        <input
+            ref={inputRef}
+            type="text"
+            className={className}
+            value={local}
+            onMouseDown={onMouseDown}
+            onChange={(e) => {
+                const s = e.target.value.replace(',', '.');
+                setLocal(s);
+                if (s === '' || s === '-' || s === '.') return;
+                const n = parseFloat(s);
+                if (!isNaN(n)) {
+                    let final = n / displayScale;
+                    if (min !== undefined) final = Math.max(min, final);
+                    if (max !== undefined) final = Math.min(max, final);
+                    onChange(final);
+                }
+            }}
+            onBlur={() => {
+                setLocal((value * displayScale).toString());
+            }}
+        />
+    );
+};
+
+const Scrubbable = ({ value, onChange, min = 0, max = 100, step = 1, label, className = "" }) => {
+    const isDragging = useRef(false);
+    const startX = useRef(0);
+    const startVal = useRef(0);
+
+    const handleMouseDown = (e) => {
+        isDragging.current = true;
+        startX.current = e.clientX;
+        startVal.current = value;
+        document.body.style.cursor = 'ew-resize';
+        e.preventDefault();
+
+        const onMouseMove = (moveEvent) => {
+            if (!isDragging.current) return;
+            const delta = moveEvent.clientX - startX.current;
+            const factor = step * 0.5; // Sensitivity
+            let nextVal = startVal.current + delta * factor;
+            if (min !== undefined) nextVal = Math.max(min, nextVal);
+            if (max !== undefined) nextVal = Math.max(min, Math.min(max, nextVal));
+
+            // Snap to step
+            const rounded = Math.round(nextVal / step) * step;
+            onChange(Number(rounded.toFixed(4)));
+        };
+
+        const onMouseUp = () => {
+            isDragging.current = false;
+            document.body.style.cursor = '';
+            window.removeEventListener('mousemove', onMouseMove);
+            window.removeEventListener('mouseup', onMouseUp);
+        };
+
+        window.addEventListener('mousemove', onMouseMove);
+        window.addEventListener('mouseup', onMouseUp);
+    };
+
+    return (
+        <div
+            onMouseDown={handleMouseDown}
+            className={`text-[12px] font-normal text-gray-600 w-24 shrink-0 cursor-ew-resize select-none py-2 pl-4 pr-1 -my-2 -ml-4 -mr-1 transition-colors hover:transition-none hover:text-black ${className}`}
+        >
+            {label}
+        </div>
+    );
+};
 
 const PixelArtEditor = () => {
     const canvasRef = useRef(null);
 
     // --- State ---
-    const [pixels, setPixels] = useState(new Set());
+    // --- Persistence ---
+    const [pixelMap, setPixelMap] = useState(() => {
+        try {
+            const saved = localStorage.getItem('pxltool_pixels');
+            return saved ? new Map(JSON.parse(saved)) : new Map();
+        } catch (e) { return new Map(); }
+    });
     const [isDrawing, setIsDrawing] = useState(false);
 
     // History
@@ -13,38 +105,73 @@ const PixelArtEditor = () => {
     const [redoStack, setRedoStack] = useState([]);
 
     // Algorithm params
-    const [roundness, setRoundness] = useState(0.4);
-    const [roundedRatio, setRoundedRatio] = useState(0.7);
-    const [brushSize, setBrushSize] = useState(1);
-    const [tool, setTool] = useState('brush');
+    const savedParams = JSON.parse(localStorage.getItem('pxltool_params') || '{}');
+    const [roundness, setRoundness] = useState(savedParams.roundness ?? 0.25);
+    const [roundedRatio, setRoundedRatio] = useState(savedParams.roundedRatio ?? 0.5);
+    const [brushSize, setBrushSize] = useState(savedParams.brushSize ?? 1);
+    const [tool, setTool] = useState('brush'); // 'brush', 'eraser', 'eyedropper'
     const [roundedCorners, setRoundedCorners] = useState(new Set());
 
-    // Bridges
+    // Colors
+    const [currentColor, setCurrentColor] = useState(savedParams.currentColor ?? '#000000');
+    const [palette, setPalette] = useState(savedParams.palette ?? ['#000000', '#FF3B30', '#4CD964', '#007AFF', '#FF9500', '#5856D6', '#FF2D55']);
+
+    // Render Settings
     const [bridges, setBridges] = useState([]);
     const [bridgeMap, setBridgeMap] = useState(new Map());
-    const [cornerMode, setCornerMode] = useState('random');
-    const [seed, setSeed] = useState(12345);
+    const [hardCongestedCells, setHardCongestedCells] = useState(new Set());
+    const [softCongestedCells, setSoftCongestedCells] = useState(new Set());
+    const [cornerMode, setCornerMode] = useState(savedParams.cornerMode ?? 'random');
+    const [cornerType, setCornerType] = useState(savedParams.cornerType ?? 'round');
+    const [renderingMode, setRenderingMode] = useState(savedParams.renderingMode ?? 'inky');
+    const [blendPower, setBlendPower] = useState(savedParams.blendPower ?? 0.4);
+    const [seed, setSeed] = useState(savedParams.seed ?? 12345);
 
-    // New Features State
-    const [aspectRatio, setAspectRatio] = useState(1); // Width multiplier (1 = square, 2 = 2:1 rectangle)
-    const [lastActivePixel, setLastActivePixel] = useState(null); // For Shift+Click lines
-    const [strokeOrigin, setStrokeOrigin] = useState(null); // For Shift+Drag orthogonal lock
+    // View & Scale
+    const [aspectRatio, setAspectRatio] = useState(savedParams.aspectRatio ?? 1);
+    const [lastActivePixel, setLastActivePixel] = useState(null);
+    const [strokeOrigin, setStrokeOrigin] = useState(null);
+    const [overlap, setOverlap] = useState(savedParams.overlap ?? 0);
 
-    // Cursor
+    const [gridWidth, setGridWidth] = useState(savedParams.gridWidth ?? 16);
+    const [gridHeight, setGridHeight] = useState(savedParams.gridHeight ?? 16);
+    const [customPalette, setCustomPalette] = useState(savedParams.customPalette ?? []);
+
+    // Persistence Effect
+    useEffect(() => {
+        localStorage.setItem('pxltool_pixels', JSON.stringify(Array.from(pixelMap.entries())));
+    }, [pixelMap]);
+
+    useEffect(() => {
+        const params = {
+            roundness, roundedRatio, brushSize, currentColor, palette, customPalette,
+            cornerMode, cornerType, renderingMode, blendPower, seed, aspectRatio, overlap,
+            gridWidth, gridHeight
+        };
+        localStorage.setItem('pxltool_params', JSON.stringify(params));
+    }, [roundness, roundedRatio, brushSize, currentColor, palette, customPalette, cornerMode, cornerType, renderingMode, blendPower, seed, aspectRatio, overlap, gridWidth, gridHeight]);
+
+    // Interaction Metadata
     const [cursorX, setCursorX] = useState(0);
     const [cursorY, setCursorY] = useState(0);
     const [isCursorVisible, setIsCursorVisible] = useState(false);
 
     // Settings
-    const [gridWidth, setGridWidth] = useState(32);
-    const [gridHeight, setGridHeight] = useState(32);
-    const [fileName, setFileName] = useState('smooth-pixels');
+    const getFileName = () => {
+        const now = new Date();
+        const month = now.toLocaleString('en', { month: 'short' }).toLowerCase();
+        const day = String(now.getDate()).padStart(2, '0');
+        const year = String(now.getFullYear()).slice(-2);
+        const hour = String(now.getHours()).padStart(2, '0');
+        const min = String(now.getMinutes()).padStart(2, '0');
+        return `pxltool_${day}${month}${year}_${hour}${min}`;
+    };
 
     // Constants
-    const MAX_DISPLAY_SIZE = 700; // Increased from 512
+    const MAX_DISPLAY_SIZE = 700;
     const CANVAS_RESOLUTION_SCALE = 2; // Internal resolution multiplier for smoother curves
 
-    // --- Helpers for Geometry ---
+    // --- Helpers ---
 
     // Bresenham's Line Algorithm for integer grids
     const getLinePixels = (x0, y0, x1, y1) => {
@@ -65,18 +192,13 @@ const PixelArtEditor = () => {
         return points;
     };
 
-    // Calculate scaling to fit the rectangular grid into the square display area
     const getDisplayMetrics = useCallback(() => {
-        const totalGridWidth = gridWidth * aspectRatio;
-        const totalGridHeight = gridHeight;
-
-        // Fit the largest dimension into MAX_DISPLAY_SIZE
+        const safeRatio = Math.max(0.1, aspectRatio);
+        const totalGridWidth = Math.max(1, gridWidth) * safeRatio;
+        const totalGridHeight = Math.max(1, gridHeight);
         const scaleFactor = MAX_DISPLAY_SIZE / Math.max(totalGridWidth, totalGridHeight);
-
-        const visualPixelWidth = scaleFactor * aspectRatio;
+        const visualPixelWidth = scaleFactor * safeRatio;
         const visualPixelHeight = scaleFactor;
-
-        // Calculate the actual dimensions of the canvas container
         const displayWidth = Math.round(gridWidth * visualPixelWidth);
         const displayHeight = Math.round(gridHeight * visualPixelHeight);
 
@@ -87,48 +209,25 @@ const PixelArtEditor = () => {
         const canvas = canvasRef.current;
         if (!canvas) return { x: 0, y: 0 };
         const rect = canvas.getBoundingClientRect();
-
-        const { visualPixelWidth, visualPixelHeight } = getDisplayMetrics();
-
-        // Relative coordinates within the canvas element
-        const relX = clientX - rect.left;
-        const relY = clientY - rect.top;
-
-        // Map to grid coordinates
-        // Dynamically calculate scale based on actual DOM size vs Internal Canvas size
-        // Note: canvas.width is now scaled by CANVAS_RESOLUTION_SCALE, but CSS size (rect) is not.
-        // We need the ratio between DOM pixels and Logical pixels.
-
-        // Since we want coordinates relative to the visual display, we can ignore the internal resolution here
-        // as long as visualPixelWidth is based on the display size.
-
-        const cssScaleX = 1; // Since we calculate relative to DOM rect, and visualPixelWidth is based on DOM size
-        const cssScaleY = 1;
-
-        const scaledX = relX;
-        const scaledY = relY;
-
-        const x = Math.floor(scaledX / visualPixelWidth);
-        const y = Math.floor(scaledY / visualPixelHeight);
-
-        return { x, y };
+        const x = Math.floor((clientX - rect.left) / (rect.width / gridWidth));
+        const y = Math.floor((clientY - rect.top) / (rect.height / gridHeight));
+        return { x, y, rect };
     };
 
-    // Updated to accept an array of points for batch operations (Lines)
     const updatePixels = (points, actionType) => {
-        setPixels(prev => {
-            const next = new Set(prev);
+        setPixelMap(prev => {
+            const next = new Map(prev);
             const offset = Math.floor(brushSize / 2);
 
             points.forEach(pt => {
-                // Apply brush size to every point in the list
                 for (let dy = 0; dy < brushSize; dy++) {
                     for (let dx = 0; dx < brushSize; dx++) {
                         const px = pt.x + dx - offset;
                         const py = pt.y + dy - offset;
                         if (px >= 0 && px < gridWidth && py >= 0 && py < gridHeight) {
-                            if (actionType === 'brush') next.add(`${px},${py}`);
-                            else next.delete(`${px},${py}`);
+                            const key = `${px},${py}`;
+                            if (actionType === 'brush') next.set(key, currentColor);
+                            else if (actionType === 'eraser') next.delete(key);
                         }
                     }
                 }
@@ -139,110 +238,101 @@ const PixelArtEditor = () => {
 
     // --- History ---
     const saveToHistory = () => {
+        const currentMap = new Map(pixelMap);
         if (history.length > 0) {
             const lastState = history[history.length - 1];
-            if (lastState.size === pixels.size && [...lastState].every(x => pixels.has(x))) return;
+            if (lastState.size === currentMap.size && [...lastState.keys()].every(x => currentMap.has(x) && currentMap.get(x) === lastState.get(x))) return;
         }
-        const newHistory = [...history, new Set(pixels)].slice(-50);
-        setHistory(newHistory);
+        setHistory(prev => [...prev, currentMap].slice(-50));
         setRedoStack([]);
     };
 
     const handleUndo = useCallback(() => {
         if (history.length === 0) return;
         const previousState = history[history.length - 1];
-        const newHistory = history.slice(0, -1);
-        setRedoStack(prev => [new Set(pixels), ...prev]);
-        setPixels(previousState);
-        setHistory(newHistory);
-        setLastActivePixel(null); // Reset line anchor on undo
-    }, [history, pixels]);
+        setRedoStack(prev => [new Map(pixelMap), ...prev]);
+        setPixelMap(previousState);
+        setHistory(h => h.slice(0, -1));
+        setLastActivePixel(null);
+    }, [history, pixelMap]);
 
     const handleRedo = useCallback(() => {
         if (redoStack.length === 0) return;
         const nextState = redoStack[0];
-        const newRedoStack = redoStack.slice(1);
-        setHistory(prev => [...prev, new Set(pixels)]);
-        setPixels(nextState);
-        setRedoStack(newRedoStack);
-    }, [redoStack, pixels]);
+        setHistory(prev => [...prev, new Map(pixelMap)]);
+        setPixelMap(nextState);
+        setRedoStack(s => s.slice(1));
+    }, [redoStack, pixelMap]);
 
     useEffect(() => {
-        const handleKeyDown = (e) => {
-            if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
-                e.preventDefault();
-                if (e.shiftKey) handleRedo();
-                else handleUndo();
+        const onKeyDown = (e) => {
+            // Undo/Redo: KeyZ
+            if (e.code === 'KeyZ') {
+                if (e.metaKey || e.ctrlKey) {
+                    e.preventDefault();
+                    if (e.shiftKey) handleRedo(); else handleUndo();
+                }
             }
-            if (e.key === 'b') setTool('brush');
-            if (e.key === 'e') setTool('eraser');
+            // Tool selection
+            if (e.code === 'KeyB') { e.preventDefault(); setTool('brush'); }
+            if (e.code === 'KeyE') { e.preventDefault(); setTool('eraser'); }
+            if (e.code === 'KeyI' && !e.shiftKey && !e.metaKey && !e.ctrlKey) { e.preventDefault(); setTool('eyedropper'); }
+            // Brush size
+            if (e.code === 'BracketLeft') { e.preventDefault(); setBrushSize(prev => Math.max(1, prev - 1)); }
+            if (e.code === 'BracketRight') { e.preventDefault(); setBrushSize(prev => Math.min(6, prev + 1)); }
         };
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
+        window.addEventListener('keydown', onKeyDown);
+        return () => window.removeEventListener('keydown', onKeyDown);
     }, [handleUndo, handleRedo]);
 
-    // --- Interaction Handlers ---
+    // --- Interaction ---
 
     const handlePointerDown = (e) => {
         e.target.setPointerCapture(e.pointerId);
         e.preventDefault();
+        const { x, y } = getPixelCoords(e.clientX, e.clientY);
+
+        if (tool === 'eyedropper' || e.altKey) {
+            const color = pixelMap.get(`${x},${y}`);
+            if (color) {
+                setCurrentColor(color);
+                setTool('brush');
+            }
+            return;
+        }
 
         const isTempEraser = e.metaKey || e.ctrlKey;
         const effectiveTool = isTempEraser ? (tool === 'brush' ? 'eraser' : 'brush') : tool;
 
         saveToHistory();
         setIsDrawing(true);
+        setStrokeOrigin({ x, y });
 
-        const { x, y } = getPixelCoords(e.clientX, e.clientY);
-        setStrokeOrigin({ x, y }); // Record start for orthogonal lock
-
-        // Feature: Shift + Click (Straight Line from last point)
-        // If Shift is held AND we have a previous point, connect them.
-        if (e.shiftKey && lastActivePixel && tool === 'brush') {
-            const linePoints = getLinePixels(lastActivePixel.x, lastActivePixel.y, x, y);
-            updatePixels(linePoints, effectiveTool);
+        if (e.shiftKey && lastActivePixel && effectiveTool === 'brush') {
+            updatePixels(getLinePixels(lastActivePixel.x, lastActivePixel.y, x, y), effectiveTool);
         } else {
-            // Standard click (Dot)
             updatePixels([{ x, y }], effectiveTool);
         }
-
         setLastActivePixel({ x, y });
     };
 
     const handlePointerMove = (e) => {
-        const { visualPixelWidth, visualPixelHeight } = getDisplayMetrics();
-        const canvasElement = canvasRef.current;
-        if (!canvasElement) return;
+        const { x, y, rect } = getPixelCoords(e.clientX, e.clientY);
+        const visualPixelWidth = rect.width / gridWidth;
+        const visualPixelHeight = rect.height / gridHeight;
 
-        let { x, y } = getPixelCoords(e.clientX, e.clientY);
-
-        // Feature: Shift + Drag (Orthogonal Lock)
-        // If drawing and Shift is held, lock to the axis relative to where the stroke started.
         if (isDrawing && e.shiftKey && strokeOrigin) {
             const dx = Math.abs(x - strokeOrigin.x);
             const dy = Math.abs(y - strokeOrigin.y);
-
-            // Lock to the axis with the greater movement
-            if (dx > dy) {
-                y = strokeOrigin.y;
-            } else {
-                x = strokeOrigin.x;
-            }
+            if (dx > dy) y = strokeOrigin.y; else x = strokeOrigin.x;
         }
 
-        // Snap cursor to calculated grid slot
-        const snappedX = x * visualPixelWidth;
-        const snappedY = y * visualPixelHeight;
-
-        setCursorX(snappedX);
-        setCursorY(snappedY);
+        setCursorX(x * visualPixelWidth);
+        setCursorY(y * visualPixelHeight);
 
         if (!isDrawing) return;
-        e.preventDefault();
-
         const isTempEraser = e.metaKey || e.ctrlKey;
         const effectiveTool = isTempEraser ? (tool === 'brush' ? 'eraser' : 'brush') : tool;
-
         updatePixels([{ x, y }], effectiveTool);
         setLastActivePixel({ x, y });
     };
@@ -253,16 +343,14 @@ const PixelArtEditor = () => {
         e.target.releasePointerCapture(e.pointerId);
     };
 
-    // --- Geometry Logic (Contours & Bridges) ---
-    // This logic operates on abstract Grid Coordinates (Integers)
+    // --- Geometry logic ---
 
     const findContour = useCallback(() => {
         const edges = [];
-        const hasPixel = (x, y) => pixels.has(`${x},${y}`);
-        pixels.forEach(key => {
+        const hasPixel = (x, y) => pixelMap.has(`${x},${y}`);
+        pixelMap.forEach((_, key) => {
             const [x, y] = key.split(',').map(Number);
             if (x >= gridWidth || y >= gridHeight || x < 0 || y < 0) return;
-
             if (!hasPixel(x, y - 1)) edges.push({ x1: x, y1: y, x2: x + 1, y2: y, side: 'top' });
             if (!hasPixel(x + 1, y)) edges.push({ x1: x + 1, y1: y, x2: x + 1, y2: y + 1, side: 'right' });
             if (!hasPixel(x, y + 1)) edges.push({ x1: x + 1, y1: y + 1, x2: x, y2: y + 1, side: 'bottom' });
@@ -270,7 +358,7 @@ const PixelArtEditor = () => {
         });
 
         if (edges.length === 0) return [];
-        const contours = [];
+        const rawContours = [];
         const used = new Set();
         for (let i = 0; i < edges.length; i++) {
             if (used.has(i)) continue;
@@ -282,7 +370,7 @@ const PixelArtEditor = () => {
                 for (let j = 0; j < edges.length; j++) {
                     if (used.has(j)) continue;
                     const next = edges[j];
-                    if (Math.abs(current.x2 - next.x1) < 0.01 && Math.abs(current.y2 - next.y1) < 0.01) {
+                    if (Math.abs(current.x2 - next.x1) < 0.001 && Math.abs(current.y2 - next.y1) < 0.001) {
                         contour.push(next);
                         used.add(j);
                         current = next;
@@ -291,109 +379,118 @@ const PixelArtEditor = () => {
                     }
                 }
                 if (!found) break;
-                if (Math.abs(current.x2 - contour[0].x1) < 0.01 && Math.abs(current.y2 - contour[0].y1) < 0.01) break;
+                if (Math.abs(current.x2 - contour[0].x1) < 0.001 && Math.abs(current.y2 - contour[0].y1) < 0.001) break;
             }
-            if (contour.length > 2) contours.push(contour);
+            if (contour.length > 2) rawContours.push(contour);
         }
-        return contours;
-    }, [pixels, gridWidth, gridHeight]);
+
+        return rawContours.map(contour => {
+            let simplified = [];
+            let current = { ...contour[0] };
+            for (let i = 1; i < contour.length; i++) {
+                const next = contour[i];
+                if (current.side === next.side) {
+                    current.x2 = next.x2; current.y2 = next.y2;
+                } else {
+                    simplified.push(current);
+                    current = { ...next };
+                }
+            }
+            simplified.push(current);
+            if (simplified.length > 2 && simplified[0].side === simplified[simplified.length - 1].side) {
+                const last = simplified.pop();
+                simplified[0].x1 = last.x1; simplified[0].y1 = last.y1;
+            }
+            return simplified;
+        });
+    }, [pixelMap, gridWidth, gridHeight]);
 
     const getCornerType = (edge1, edge2) => {
-        const dx1 = edge1.x2 - edge1.x1;
-        const dy1 = edge1.y2 - edge1.y1;
-        const dx2 = edge2.x2 - edge2.x1;
-        const dy2 = edge2.y2 - edge2.y1;
+        const dx1 = edge1.x2 - edge1.x1; const dy1 = edge1.y2 - edge1.y1;
+        const dx2 = edge2.x2 - edge2.x1; const dy2 = edge2.y2 - edge2.y1;
         const cross = dx1 * dy2 - dy1 * dx2;
-        return cross > 0 ? 'convex' : 'concave';
-    };
-
-    const pseudoRandom = (x, y, seed) => {
-        const n = Math.sin(x * 12.9898 + y * 78.233 + seed * 43758.5453) * 43758.5453;
-        return n - Math.floor(n);
+        return cross > 0 ? 'convex' : (cross < 0 ? 'concave' : 'straight');
     };
 
     const drawBridgeFillet = (ctx, b, r, isSvg = false) => {
         const { visualPixelWidth, visualPixelHeight } = getDisplayMetrics();
-        // Calculate screen coordinates
-        const cx = b.X * visualPixelWidth;
-        const cy = b.Y * visualPixelHeight;
+        const safeRatio = Math.max(0.1, aspectRatio);
+        const budgetFactor = Math.min(1, safeRatio);
+        const oX = ((overlap / 2) * budgetFactor / safeRatio) * visualPixelWidth;
+        const oY = ((overlap / 2) * budgetFactor) * visualPixelHeight;
 
-        // Clamp radius to shortest dimension to avoid overlap in rectangular pixels
-        const minDim = Math.min(visualPixelWidth, visualPixelHeight);
-        const maxR = Math.min(r, minDim * 0.5);
+        let cx = b.X * visualPixelWidth; let cy = b.Y * visualPixelHeight;
+        if (b.quadrant === 'TR_GAP_FILLET') { cx += oX; cy -= oY; }
+        else if (b.quadrant === 'BL_GAP_FILLET') { cx -= oX; cy += oY; }
+        else if (b.quadrant === 'BR_GAP_FILLET') { cx += oX; cy += oY; }
+        else if (b.quadrant === 'TL_GAP_FILLET') { cx -= oX; cy -= oY; }
 
-        let sx, sy, ex, ey;
+        const cellX = (b.quadrant.includes('TR') || b.quadrant.includes('BR')) ? b.X : b.X - 1;
+        const cellY = (b.quadrant.includes('TR') || b.quadrant.includes('TL')) ? b.Y - 1 : b.Y;
+        const isNarrow = hardCongestedCells.has(`${cellX},${cellY}`);
+        const gapBudget = visualPixelWidth * (0.5 * (1 - Math.abs(overlap)) / (1 + Math.abs(overlap)));
+        const maxR = Math.min(r, isNarrow ? gapBudget : visualPixelWidth * 0.499);
+        const K = 0.552284;
 
-        // Note: For rectangular pixels, the bridge fillets need to align with the stretched edges.
-        // The vertex is (cx, cy). 
-        if (b.quadrant === 'TR_GAP_FILLET') {
-            sx = cx; sy = cy - maxR;
-            ex = cx + maxR; ey = cy;
-        }
-        else if (b.quadrant === 'BL_GAP_FILLET') {
-            sx = cx - maxR; sy = cy;
-            ex = cx; ey = cy + maxR;
-        }
-        else if (b.quadrant === 'BR_GAP_FILLET') {
-            sx = cx + maxR; sy = cy;
-            ex = cx; ey = cy + maxR;
-        }
-        else if (b.quadrant === 'TL_GAP_FILLET') {
-            sx = cx; sy = cy - maxR;
-            ex = cx - maxR; ey = cy;
-        }
+        let sx, sy, ex, ey, swapped = false;
+        if (b.quadrant === 'TR_GAP_FILLET') { sx = cx; sy = cy - maxR; ex = cx + maxR; ey = cy; }
+        else if (b.quadrant === 'BL_GAP_FILLET') { sx = cx - maxR; sy = cy; ex = cx; ey = cy + maxR; swapped = true; }
+        else if (b.quadrant === 'BR_GAP_FILLET') { sx = cx + maxR; sy = cy; ex = cx; ey = cy + maxR; }
+        else if (b.quadrant === 'TL_GAP_FILLET') { sx = cx; sy = cy - maxR; ex = cx - maxR; ey = cy; swapped = true; }
 
         if (sx === undefined) return isSvg ? '' : null;
+        const p1x = swapped ? ex : sx; const p1y = swapped ? ey : sy;
+        const p2x = swapped ? sx : ex; const p2y = swapped ? sy : ey;
 
         if (isSvg) {
-            return `M ${sx} ${sy} Q ${cx} ${cy} ${ex} ${ey} L ${cx} ${cy} Z `;
+            if (cornerType === 'bevel') {
+                return `M ${cx} ${cy} L ${p1x} ${p1y} L ${p2x} ${p2y} Z `;
+            }
+            return `M ${cx} ${cy} L ${p1x} ${p1y} C ${p1x + (cx - p1x) * K} ${p1y + (cy - p1y) * K} ${p2x + (cx - p2x) * K} ${p2y + (cy - p2y) * K} ${p2x} ${p2y} Z `;
         } else {
-            ctx.moveTo(sx, sy);
-            ctx.quadraticCurveTo(cx, cy, ex, ey);
-            ctx.lineTo(cx, cy);
-            ctx.lineTo(sx, sy);
-            return null;
+            ctx.moveTo(cx, cy); ctx.lineTo(p1x, p1y);
+            if (cornerType === 'bevel') {
+                ctx.lineTo(p2x, p2y);
+            } else {
+                ctx.bezierCurveTo(p1x + (cx - p1x) * K, p1y + (cy - p1y) * K, p2x + (cx - p2x) * K, p2y + (cy - p2y) * K, p2x, p2y);
+            }
+            ctx.closePath(); return null;
         }
     };
 
     const regenerateRounding = useCallback(() => {
+        const pseudoRandom = (x, y, s) => {
+            const n = Math.sin(x * 12.9 + y * 78.2 + s * 43758) * 43758;
+            return n - Math.floor(n);
+        };
+
         const contours = findContour();
-        const newRoundedCorners = new Set();
-        contours.forEach((contour, cId) => {
-            contour.forEach((edge, i) => {
-                const nextEdge = contour[(i + 1) % contour.length];
-                const cornerType = getCornerType(edge, nextEdge);
-
-                if (cornerMode === 'outer' && cornerType !== 'convex') return;
-                if (cornerMode === 'inner' && cornerType !== 'concave') return;
-
-                const val = pseudoRandom(edge.x2, edge.y2, seed);
-                if (val < roundedRatio) {
-                    newRoundedCorners.add(`${cId}-${i}`);
-                }
+        const newCorners = new Set();
+        contours.forEach((c) => {
+            c.forEach((edge, i) => {
+                const type = getCornerType(edge, c[(i + 1) % c.length]);
+                if (cornerMode === 'outer' && type !== 'convex') return;
+                if (cornerMode === 'inner' && type !== 'concave') return;
+                // Stable key: Coordinate of the corner junction
+                const key = `${edge.x2},${edge.y2}`;
+                if (pseudoRandom(edge.x2, edge.y2, seed) < roundedRatio) newCorners.add(key);
             });
         });
-        setRoundedCorners(newRoundedCorners);
+        setRoundedCorners(newCorners);
 
-        const newBridges = [];
-        const newBridgeMap = new Map();
-        if (cornerMode !== 'outer' && pixels.size > 0) {
-            const hasPixel = (x, y) => pixels.has(`${x},${y}`);
+        const newBridges = []; const newBridgeMap = new Map();
+        if (cornerMode !== 'outer' && pixelMap.size > 0 && overlap >= 0) {
+            const has = (x, y) => pixelMap.has(`${x},${y}`);
             for (let X = 1; X < gridWidth; X++) {
                 for (let Y = 1; Y < gridHeight; Y++) {
-                    const Ptl = hasPixel(X - 1, Y - 1);
-                    const Ptr = hasPixel(X, Y - 1);
-                    const Pbl = hasPixel(X - 1, Y);
-                    const Pbr = hasPixel(X, Y);
-
-                    if (Ptl && Pbr && !Ptr && !Pbl) {
+                    if (has(X - 1, Y - 1) && has(X, Y) && !has(X, Y - 1) && !has(X - 1, Y)) {
                         if (pseudoRandom(X, Y, seed + 1) < roundedRatio) {
                             newBridges.push({ X, Y, quadrant: 'TR_GAP_FILLET' });
                             newBridges.push({ X, Y, quadrant: 'BL_GAP_FILLET' });
                             newBridgeMap.set(`${X},${Y}`, true);
                         }
                     }
-                    if (Ptr && Pbl && !Ptl && !Pbr) {
+                    if (has(X, Y - 1) && has(X - 1, Y) && !has(X - 1, Y - 1) && !has(X, Y)) {
                         if (pseudoRandom(X, Y, seed + 2) < roundedRatio) {
                             newBridges.push({ X, Y, quadrant: 'BR_GAP_FILLET' });
                             newBridges.push({ X, Y, quadrant: 'TL_GAP_FILLET' });
@@ -403,322 +500,710 @@ const PixelArtEditor = () => {
                 }
             }
         }
-        setBridges(newBridges);
-        setBridgeMap(newBridgeMap);
+        setBridges(newBridges); setBridgeMap(newBridgeMap);
 
-    }, [findContour, cornerMode, roundedRatio, seed, pixels, gridWidth, gridHeight]);
+        const counts = new Map(); const convexFaced = new Set(); const hard = new Set(); const soft = new Set();
+        contours.forEach((cnt) => {
+            cnt.forEach((e, i) => {
+                const next = cnt[(i + 1) % cnt.length];
+                const type = getCornerType(e, next);
+                const key = `${next.x1},${next.y1}`; // Simplified stable key
+                if (type === 'concave' && newCorners.has(key)) counts.set(key, (counts.get(key) || 0) + 1);
+                if (type === 'convex') convexFaced.add(key);
+            });
+        });
+        newBridges.forEach(b => {
+            const keys = {
+                'TR_GAP_FILLET': `${b.X},${b.Y - 1}`, 'BL_GAP_FILLET': `${b.X - 1},${b.Y}`,
+                'TL_GAP_FILLET': `${b.X - 1},${b.Y - 1}`, 'BR_GAP_FILLET': `${b.X},${b.Y}`
+            };
+            const k = keys[b.quadrant]; counts.set(k, (counts.get(k) || 0) + 1);
+        });
+        counts.forEach((count, k) => {
+            if (count > 1) hard.add(k);
+            if (convexFaced.has(k)) { if (cornerMode === 'inner') hard.add(k); else if (cornerMode === 'random') soft.add(k); }
+        });
+        setHardCongestedCells(hard); setSoftCongestedCells(soft);
+    }, [findContour, gridWidth, gridHeight, pixelMap, cornerMode, roundedRatio, seed, overlap]);
 
-    useEffect(() => {
-        regenerateRounding();
-    }, [pixels, roundedRatio, cornerMode, seed, regenerateRounding]);
-
+    useEffect(() => { regenerateRounding(); }, [pixelMap, roundedRatio, cornerMode, seed, regenerateRounding]);
 
     // --- Rendering ---
 
     const drawScene = useCallback((ctx, isExport = false) => {
         const { visualPixelWidth, visualPixelHeight, displayWidth, displayHeight } = getDisplayMetrics();
-
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, displayWidth, displayHeight);
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, displayWidth, displayHeight);
 
         if (!isExport) {
-            ctx.beginPath();
-            ctx.strokeStyle = '#e5e7eb';
-            ctx.lineWidth = 0.5;
-
-            // Draw Vertical lines
-            for (let i = 0; i <= gridWidth; i++) {
-                const xPos = i * visualPixelWidth;
-                ctx.moveTo(xPos, 0);
-                ctx.lineTo(xPos, displayHeight);
-            }
-            // Draw Horizontal lines
-            for (let i = 0; i <= gridHeight; i++) {
-                const yPos = i * visualPixelHeight;
-                ctx.moveTo(0, yPos);
-                ctx.lineTo(displayWidth, yPos);
-            }
+            ctx.beginPath(); ctx.strokeStyle = '#e5e7eb'; ctx.lineWidth = 0.5;
+            for (let i = 0; i <= gridWidth; i++) { ctx.moveTo(i * visualPixelWidth, 0); ctx.lineTo(i * visualPixelWidth, displayHeight); }
+            for (let i = 0; i <= gridHeight; i++) { ctx.moveTo(0, i * visualPixelHeight); ctx.lineTo(displayWidth, i * visualPixelHeight); }
             ctx.stroke();
         }
 
-        if (pixels.size === 0) return;
-
-        const contours = findContour();
+        if (pixelMap.size === 0) return;
         const minDim = Math.min(visualPixelWidth, visualPixelHeight);
         const r = roundness * minDim;
 
-        ctx.fillStyle = '#000000';
         ctx.beginPath();
+        if (overlap < 0 || renderingMode === 'independent') {
 
-        contours.forEach((contour, contourId) => {
-            if (contour.length > 0) ctx.moveTo(contour[0].x1 * visualPixelWidth, contour[0].y1 * visualPixelHeight);
+            pixelMap.forEach((_, key) => {
+                const [x, y] = key.split(',').map(Number);
+                const safeRatio = Math.max(0.1, aspectRatio); const budgetFactor = Math.min(1, safeRatio);
+                const x1 = (x - (overlap / 2 * budgetFactor) / safeRatio) * visualPixelWidth;
+                const y1 = (y - (overlap / 2 * budgetFactor)) * visualPixelHeight;
+                const x2 = (x + 1 + (overlap / 2 * budgetFactor) / safeRatio) * visualPixelWidth;
+                const y2 = (y + 1 + (overlap / 2 * budgetFactor)) * visualPixelHeight;
 
-            contour.forEach((edge, i) => {
-                const nextEdge = contour[(i + 1) % contour.length];
+                const shouldRound = (cx, cy) => pseudoRandom(cx, cy, seed) < roundedRatio;
+                const maxR = Math.min((x2 - x1) * 0.5, (y2 - y1) * 0.5);
+                const currentR = (roundness / 0.5) * maxR;
 
-                // Screen coordinates
-                const px = edge.x2 * visualPixelWidth;
-                const py = edge.y2 * visualPixelHeight;
+                const rTL = shouldRound(x, y) ? currentR : 0;
+                const rTR = shouldRound(x + 1, y) ? currentR : 0;
+                const rBR = shouldRound(x + 1, y + 1) ? currentR : 0;
+                const rBL = shouldRound(x, y + 1) ? currentR : 0;
 
-                const vertexX = edge.x2;
-                const vertexY = edge.y2;
-
-                let shouldRound = roundedCorners.has(`${contourId}-${i}`);
-                if (bridgeMap.has(`${vertexX},${vertexY}`)) shouldRound = false;
-
-                if (shouldRound && r > 0) {
-                    const dx1 = edge.x2 - edge.x1;
-                    const dy1 = edge.y2 - edge.y1;
-                    const dx2 = nextEdge.x2 - nextEdge.x1;
-                    const dy2 = nextEdge.y2 - nextEdge.y1;
-
-                    const maxR = Math.min(r, minDim * 0.5);
-
-                    const backX = px - (dx1 !== 0 ? Math.sign(dx1) * maxR : 0);
-                    const backY = py - (dy1 !== 0 ? Math.sign(dy1) * maxR : 0);
-
-                    const fwdX = px + (dx2 !== 0 ? Math.sign(dx2) * maxR : 0);
-                    const fwdY = py + (dy2 !== 0 ? Math.sign(dy2) * maxR : 0);
-
-                    ctx.lineTo(backX, backY);
-                    ctx.arcTo(px, py, fwdX, fwdY, maxR);
+                if (cornerType === 'bevel') {
+                    ctx.moveTo(x1 + rTL, y1); ctx.lineTo(x2 - rTR, y1); ctx.lineTo(x2, y1 + rTR);
+                    ctx.lineTo(x2, y2 - rBR); ctx.lineTo(x2 - rBR, y2);
+                    ctx.lineTo(x1 + rBL, y2); ctx.lineTo(x1, y2 - rBL);
+                    ctx.lineTo(x1, y1 + rTL); ctx.closePath();
                 } else {
-                    ctx.lineTo(px, py);
+                    ctx.moveTo(x1 + rTL, y1); ctx.lineTo(x2 - rTR, y1); ctx.arcTo(x2, y1, x2, y1 + rTR, rTR);
+                    ctx.lineTo(x2, y2 - rBR); ctx.arcTo(x2, y2, x2 - rBR, y2, rBR);
+                    ctx.lineTo(x1 + rBL, y2); ctx.arcTo(x1, y2, x1, y2 - rBL, rBL);
+                    ctx.lineTo(x1, y1 + rTL); ctx.arcTo(x1, y1, x1 + rTL, y1, rTL); ctx.closePath();
                 }
             });
-            ctx.closePath();
+        } else {
+            const contours = findContour();
+            const getAdjusted = (v, sIn, sOut) => {
+                let dx = 0, dy = 0; const safeRatio = Math.max(0.1, aspectRatio); const budgetFactor = Math.min(1, safeRatio);
+                if (sIn === 'top' || sOut === 'top') dy -= overlap / 2 * budgetFactor;
+                if (sIn === 'bottom' || sOut === 'bottom') dy += overlap / 2 * budgetFactor;
+                if (sIn === 'left' || sOut === 'left') dx -= (overlap / 2 * budgetFactor) / safeRatio;
+                if (sIn === 'right' || sOut === 'right') dx += (overlap / 2 * budgetFactor) / safeRatio;
+                return { x: (v.x + dx) * visualPixelWidth, y: (v.y + dy) * visualPixelHeight };
+            };
+            const K = 0.552284;
+            contours.forEach((contour) => {
+                const cornerData = contour.map((edge, i) => {
+                    const nextEdge = contour[(i + 1) % contour.length];
+                    const nextNextEdge = contour[(i + 2) % contour.length];
+                    const p = getAdjusted({ x: edge.x1, y: edge.y1 }, contour[(i - 1 + contour.length) % contour.length].side, edge.side);
+                    const next = getAdjusted({ x: edge.x2, y: edge.y2 }, edge.side, nextEdge.side);
+                    const after = getAdjusted({ x: nextEdge.x2, y: nextEdge.y2 }, nextEdge.side, nextNextEdge.side);
+
+                    const junctionKey = `${edge.x2},${edge.y2}`;
+                    const congestionKey = junctionKey;
+                    const isRounded = roundedCorners.has(junctionKey) && !bridgeMap.has(junctionKey);
+
+                    let mR = 0;
+                    let bX = next.x, bY = next.y, fX = next.x, fY = next.y;
+                    const dx1 = next.x - p.x, dy1 = next.y - p.y, dx2 = after.x - next.x, dy2 = after.y - next.y;
+                    const L1 = Math.sqrt(dx1 * dx1 + dy1 * dy1), L2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+
+                    if (isRounded && r > 0 && L1 > 0.01 && L2 > 0.01) {
+                        const gB = visualPixelWidth * (0.5 * (1 - Math.abs(overlap)) / (1 + Math.abs(overlap)));
+                        let cB = visualPixelWidth * 0.499;
+                        if (getCornerType(edge, nextEdge) === 'concave') { if (hardCongestedCells.has(congestionKey)) cB = gB; }
+                        else if (cornerMode === 'random' && softCongestedCells.has(congestionKey)) {
+                            let f = (overlap <= 0.8) ? Math.max(0, overlap) / 0.8 : 1;
+                            cB = visualPixelWidth * (0.499 * (1 - f * 0.45) + (gB / visualPixelWidth) * (f * 0.45));
+                        }
+                        mR = Math.min(r, L1 * 0.499, L2 * 0.499, cB);
+                        if (mR > 0.01) {
+                            bX = next.x - (dx1 / L1) * mR; bY = next.y - (dy1 / L1) * mR;
+                            fX = next.x + (dx2 / L2) * mR; fY = next.y + (dy2 / L2) * mR;
+                        }
+                    }
+                    return { bX, bY, fX, fY, mR, nextX: next.x, nextY: next.y, dx1: dx1 / Math.max(0.1, L1), dy1: dy1 / Math.max(0.1, L1), dx2: dx2 / Math.max(0.1, L2), dy2: dy2 / Math.max(0.1, L2) };
+                });
+
+                ctx.moveTo(cornerData[cornerData.length - 1].fX, cornerData[cornerData.length - 1].fY);
+                cornerData.forEach((d) => {
+                    ctx.lineTo(d.bX, d.bY);
+                    if (d.mR > 0.01) {
+                        if (cornerType === 'bevel') ctx.lineTo(d.fX, d.fY);
+                        else ctx.bezierCurveTo(d.bX + d.dx1 * d.mR * K, d.bY + d.dy1 * d.mR * K, d.fX - d.dx2 * d.mR * K, d.fY - d.dy2 * d.mR * K, d.fX, d.fY);
+                    }
+                });
+                ctx.closePath();
+            });
+            if (bridges.length > 0 && r > 0) bridges.forEach(b => drawBridgeFillet(ctx, b, r, false));
+        }
+
+        // --- Liquid Color Field ---
+        ctx.save();
+        ctx.clip();
+
+        // Efficient Real-time Liquid Preview
+        const buffer = document.createElement('canvas');
+        buffer.width = gridWidth; buffer.height = gridHeight;
+        const bCtx = buffer.getContext('2d');
+
+        // Neighborhood Color Expansion (Dilation) to prevent edge-fade
+        const expansionArea = new Map();
+        pixelMap.forEach((color, key) => {
+            const [x, y] = key.split(',').map(Number);
+            [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1], [x + 1, y + 1], [x - 1, y - 1], [x + 1, y - 1], [x - 1, y + 1]].forEach(([nx, ny]) => {
+                if (!pixelMap.has(`${nx},${ny}`) && nx >= 0 && nx < gridWidth && ny >= 0 && ny < gridHeight) {
+                    const nKey = `${nx},${ny}`;
+                    if (!expansionArea.has(nKey)) expansionArea.set(nKey, []);
+                    expansionArea.get(nKey).push(color);
+                }
+            });
         });
 
-        if (bridges.length > 0 && r > 0) {
-            bridges.forEach(b => drawBridgeFillet(ctx, b, r * minDim, false));
-        }
-        ctx.fill('evenodd');
-    }, [gridWidth, gridHeight, pixels, findContour, roundness, roundedCorners, bridgeMap, bridges, getDisplayMetrics]);
+        expansionArea.forEach((colors, key) => {
+            const [x, y] = key.split(',').map(Number);
+            const avg = colors.reduce((acc, c) => {
+                acc[0] += parseInt(c.slice(1, 3), 16);
+                acc[1] += parseInt(c.slice(3, 5), 16);
+                acc[2] += parseInt(c.slice(5, 7), 16);
+                return acc;
+            }, [0, 0, 0]).map(v => Math.round(v / colors.length));
+            bCtx.fillStyle = '#' + avg.map(v => v.toString(16).padStart(2, '0')).join('');
+            bCtx.fillRect(x, y, 1, 1);
+        });
 
-    const { displayWidth, displayHeight } = getDisplayMetrics();
+        pixelMap.forEach((color, key) => {
+            const [x, y] = key.split(',').map(Number);
+            bCtx.fillStyle = color;
+            bCtx.fillRect(x, y, 1, 1);
+        });
+
+        // Pixel-Level Blending
+        let finalBuffer = buffer;
+        if (blendPower > 0.1) {
+            const tempBuffer = document.createElement('canvas');
+            tempBuffer.width = gridWidth; tempBuffer.height = gridHeight;
+            const tCtx = tempBuffer.getContext('2d');
+            tCtx.filter = `blur(${blendPower * 1.25}px)`;
+            tCtx.drawImage(buffer, 0, 0);
+            finalBuffer = tempBuffer;
+        }
+
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(finalBuffer, 0, 0, gridWidth, gridHeight, 0, 0, displayWidth, displayHeight);
+        ctx.restore();
+    }, [gridWidth, gridHeight, pixelMap, findContour, roundness, overlap, roundedCorners, hardCongestedCells, softCongestedCells, bridges, cornerType, getDisplayMetrics, cornerMode, blendPower, aspectRatio, renderingMode, seed, roundedRatio]);
 
     useEffect(() => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-
-        // High DPI Handling
-        // Set internal dimensions to scaled size
-        canvas.width = displayWidth * CANVAS_RESOLUTION_SCALE;
-        canvas.height = displayHeight * CANVAS_RESOLUTION_SCALE;
-
-        // Scale context so we can draw using logical coordinates
+        const cvs = canvasRef.current; if (!cvs) return;
+        const ctx = cvs.getContext('2d'); const { displayWidth, displayHeight } = getDisplayMetrics();
+        cvs.width = displayWidth * CANVAS_RESOLUTION_SCALE; cvs.height = displayHeight * CANVAS_RESOLUTION_SCALE;
         ctx.scale(CANVAS_RESOLUTION_SCALE, CANVAS_RESOLUTION_SCALE);
-
         drawScene(ctx, false);
-    }, [drawScene, displayWidth, displayHeight]);
-
+    }, [drawScene, getDisplayMetrics]);
 
     // --- Export ---
+
     const getSVGString = () => {
         const { visualPixelWidth, visualPixelHeight, displayWidth, displayHeight } = getDisplayMetrics();
-        const contours = findContour();
         const minDim = Math.min(visualPixelWidth, visualPixelHeight);
         const r = roundness * minDim;
+        const getAdjusted = (v, sIn, sOut) => {
+            let dx = 0, dy = 0; const safeRatio = Math.max(0.1, aspectRatio); const budgetFactor = Math.min(1, safeRatio);
+            if (sIn === 'top' || sOut === 'top') dy -= overlap / 2 * budgetFactor;
+            if (sIn === 'bottom' || sOut === 'bottom') dy += overlap / 2 * budgetFactor;
+            if (sIn === 'left' || sOut === 'left') dx -= (overlap / 2 * budgetFactor) / safeRatio;
+            if (sIn === 'right' || sOut === 'right') dx += (overlap / 2 * budgetFactor) / safeRatio;
+            return { x: (v.x + dx) * visualPixelWidth, y: (v.y + dy) * visualPixelHeight };
+        };
+        const K = 0.552284; let pathData = '';
+        if (overlap < 0 || renderingMode === 'independent') {
 
-        let pathData = '';
-        contours.forEach((contour, contourId) => {
-            if (contour.length === 0) return;
-            pathData += `M ${contour[0].x1 * visualPixelWidth} ${contour[0].y1 * visualPixelHeight} `;
+            pixelMap.forEach((_, key) => {
+                const [x, y] = key.split(',').map(Number);
+                const safeRatio = Math.max(0.1, aspectRatio); const budgetFactor = Math.min(1, safeRatio);
+                const x1 = (x - (overlap / 2 * budgetFactor) / safeRatio) * visualPixelWidth, y1 = (y - overlap / 2 * budgetFactor) * visualPixelHeight;
+                const x2 = (x + 1 + (overlap / 2 * budgetFactor) / safeRatio) * visualPixelWidth, y2 = (y + 1 + overlap / 2 * budgetFactor) * visualPixelHeight;
 
-            contour.forEach((edge, i) => {
-                const nextEdge = contour[(i + 1) % contour.length];
-                const px = edge.x2 * visualPixelWidth;
-                const py = edge.y2 * visualPixelHeight;
-                const vertexX = edge.x2;
-                const vertexY = edge.y2;
-                let shouldRound = roundedCorners.has(`${contourId}-${i}`);
-                if (bridgeMap.has(`${vertexX},${vertexY}`)) shouldRound = false;
+                const shouldRound = (cx, cy) => pseudoRandom(cx, cy, seed) < roundedRatio;
+                const maxR = Math.min((x2 - x1) * 0.499, (y2 - y1) * 0.499);
+                const currentR = (roundness / 0.5) * maxR;
 
-                if (shouldRound && r > 0) {
-                    const dx1 = edge.x2 - edge.x1;
-                    const dy1 = edge.y2 - edge.y1;
-                    const dx2 = nextEdge.x2 - nextEdge.x1;
-                    const dy2 = nextEdge.y2 - nextEdge.y1;
+                const rTL = shouldRound(x, y) ? currentR : 0;
+                const rTR = shouldRound(x + 1, y) ? currentR : 0;
+                const rBR = shouldRound(x + 1, y + 1) ? currentR : 0;
+                const rBL = shouldRound(x, y + 1) ? currentR : 0;
 
-                    const maxR = Math.min(r, minDim * 0.5);
-
-                    const backX = px - (dx1 !== 0 ? Math.sign(dx1) * maxR : 0);
-                    const backY = py - (dy1 !== 0 ? Math.sign(dy1) * maxR : 0);
-                    const fwdX = px + (dx2 !== 0 ? Math.sign(dx2) * maxR : 0);
-                    const fwdY = py + (dy2 !== 0 ? Math.sign(dy2) * maxR : 0);
-
-                    pathData += `L ${backX} ${backY} `;
-                    // Q control point is the vertex (px, py), end point is fwd
-                    pathData += `Q ${px} ${py} ${fwdX} ${fwdY} `;
+                if (cornerType === 'bevel') {
+                    pathData += `M ${x1 + rTL} ${y1} L ${x2 - rTR} ${y1} L ${x2} ${y1 + rTR} L ${x2} ${y2 - rBR} L ${x2 - rBR} ${y2} L ${x1 + rBL} ${y2} L ${x1} ${y2 - rBL} L ${x1} ${y1 + rTL} Z `;
                 } else {
-                    pathData += `L ${px} ${py} `;
+                    pathData += `M ${x1 + rTL} ${y1} L ${x2 - rTR} ${y1} Q ${x2} ${y1} ${x2} ${y1 + rTR} L ${x2} ${y2 - rBR} Q ${x2} ${y2} ${x2 - rBR} ${y2} L ${x1 + rBL} ${y2} Q ${x1} ${y2} ${x1} ${y2 - rBL} L ${x1} ${y1 + rTL} Q ${x1} ${y1} ${x1 + rTL} ${y1} Z `;
                 }
             });
-            pathData += 'Z ';
+        } else {
+            const contours = findContour();
+            contours.forEach((contour) => {
+                const cornerData = contour.map((edge, i) => {
+                    const nextEdge = contour[(i + 1) % contour.length];
+                    const nextNextEdge = contour[(i + 2) % contour.length];
+                    const p = getAdjusted({ x: edge.x1, y: edge.y1 }, contour[(i - 1 + contour.length) % contour.length].side, edge.side);
+                    const next = getAdjusted({ x: edge.x2, y: edge.y2 }, edge.side, nextEdge.side);
+                    const after = getAdjusted({ x: nextEdge.x2, y: nextEdge.y2 }, nextEdge.side, nextNextEdge.side);
+
+                    const junctionKey = `${edge.x2},${edge.y2}`;
+                    const congestionKey = junctionKey;
+                    const isRounded = roundedCorners.has(junctionKey) && !bridgeMap.has(junctionKey);
+
+                    let mR = 0;
+                    let bX = next.x, bY = next.y, fX = next.x, fY = next.y;
+                    const dx1 = next.x - p.x, dy1 = next.y - p.y, dx2 = after.x - next.x, dy2 = after.y - next.y;
+                    const L1 = Math.sqrt(dx1 * dx1 + dy1 * dy1), L2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+
+                    if (isRounded && r > 0 && L1 > 0.01 && L2 > 0.01) {
+                        const gB = visualPixelWidth * (0.5 * (1 - Math.abs(overlap)) / (1 + Math.abs(overlap)));
+                        let cB = visualPixelWidth * 0.499;
+                        if (getCornerType(edge, nextEdge) === 'concave') { if (hardCongestedCells.has(congestionKey)) cB = gB; }
+                        else if (cornerMode === 'random' && softCongestedCells.has(congestionKey)) {
+                            let f = (overlap <= 0.8) ? Math.max(0, overlap) / 0.8 : 1;
+                            cB = visualPixelWidth * (0.499 * (1 - f * 0.45) + (gB / visualPixelWidth) * (f * 0.45));
+                        }
+                        mR = Math.min(r, L1 * 0.499, L2 * 0.499, cB);
+                        if (mR > 0.01) {
+                            bX = next.x - (dx1 / L1) * mR; bY = next.y - (dy1 / L1) * mR;
+                            fX = next.x + (dx2 / L2) * mR; fY = next.y + (dy2 / L2) * mR;
+                        }
+                    }
+                    return { bX, bY, fX, fY, mR, dx1: dx1 / Math.max(0.1, L1), dy1: dy1 / Math.max(0.1, L1), dx2: dx2 / Math.max(0.1, L2), dy2: dy2 / Math.max(0.1, L2) };
+                });
+
+                pathData += `M ${cornerData[cornerData.length - 1].fX} ${cornerData[cornerData.length - 1].fY} `;
+                cornerData.forEach((d) => {
+                    pathData += `L ${d.bX} ${d.bY} `;
+                    if (d.mR > 0.01) {
+                        if (cornerType === 'bevel') pathData += `L ${d.fX} ${d.fY} `;
+                        else pathData += `C ${d.bX + d.dx1 * d.mR * K} ${d.bY + d.dy1 * d.mR * K} ${d.fX - d.dx2 * d.mR * K} ${d.fY - d.dy2 * d.mR * K} ${d.fX} ${d.fY} `;
+                    }
+                });
+                pathData += 'Z ';
+            });
+            if (bridges.length > 0 && r > 0) bridges.forEach(b => { pathData += drawBridgeFillet(null, b, r, true); });
+        }
+        // To ensure 100% Figma/Illustrator compatibility and perfect aspect ratio handling,
+        // we use a Bilinear Image Fill approach for the internal colors.
+        // This exactly matches the canvas preview and is totally reliable in vector tools.
+
+        // High-Fidelity "Baking" for Export (Figma/Illustrator Compatibility)
+        // Optimized for small file size (KBs instead of MBs) using moderate resolution JPEG
+        const targetRes = 1024;
+        const upscale = Math.max(1, Math.floor(targetRes / Math.max(gridWidth, gridHeight)));
+        const exportCanvas = document.createElement('canvas');
+        exportCanvas.width = (gridWidth + 2) * upscale;
+        exportCanvas.height = (gridHeight + 2) * upscale;
+        const eCtx = exportCanvas.getContext('2d');
+        eCtx.imageSmoothingEnabled = true;
+
+        // 1. Dilation Pass (Edge Expansion)
+        const expansionArea = new Map();
+        pixelMap.forEach((color, key) => {
+            const [x, y] = key.split(',').map(Number);
+            [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1], [x + 1, y + 1], [x - 1, y - 1], [x + 1, y - 1], [x - 1, y + 1]].forEach(([nx, ny]) => {
+                if (!pixelMap.has(`${nx},${ny}`) && nx >= 0 && nx < gridWidth && ny >= 0 && ny < gridHeight) {
+                    const nKey = `${nx},${ny}`;
+                    if (!expansionArea.has(nKey)) expansionArea.set(nKey, []);
+                    expansionArea.get(nKey).push(color);
+                }
+            });
         });
 
-        if (bridges.length > 0 && r > 0) {
-            bridges.forEach(b => {
-                pathData += drawBridgeFillet(null, b, r, true);
-            });
+        expansionArea.forEach((colors, key) => {
+            const [x, y] = key.split(',').map(Number);
+            const avg = colors.reduce((acc, c) => {
+                acc[0] += parseInt(c.slice(1, 3), 16);
+                acc[1] += parseInt(c.slice(3, 5), 16);
+                acc[2] += parseInt(c.slice(5, 7), 16);
+                return acc;
+            }, [0, 0, 0]).map(v => Math.round(v / colors.length));
+            eCtx.fillStyle = '#' + avg.map(v => v.toString(16).padStart(2, '0')).join('');
+            eCtx.fillRect((x + 1) * upscale, (y + 1) * upscale, upscale, upscale);
+        });
+
+        // 2. Main Pixel Pass
+        pixelMap.forEach((color, key) => {
+            const [x, y] = key.split(',').map(Number);
+            eCtx.fillStyle = color;
+            eCtx.fillRect((x + 1) * upscale, (y + 1) * upscale, upscale, upscale);
+        });
+
+        // 3. Bake the Liquid Blur into the High-Res Image
+        if (blendPower > 0.1) {
+            const tempCvs = document.createElement('canvas');
+            tempCvs.width = exportCanvas.width; tempCvs.height = exportCanvas.height;
+            const tCtx = tempCvs.getContext('2d');
+            tCtx.filter = `blur(${blendPower * 1.25 * upscale}px)`; // Blur scaled to upscale factor
+            tCtx.drawImage(exportCanvas, 0, 0);
+            eCtx.clearRect(0, 0, exportCanvas.width, exportCanvas.height);
+            eCtx.drawImage(tempCvs, 0, 0);
         }
 
-        return `
-<svg width="${displayWidth}" height="${displayHeight}" viewBox="0 0 ${displayWidth} ${displayHeight}" xmlns="http://www.w3.org/2000/svg">
-<rect width="100%" height="100%" fill="white"/>
-<path d="${pathData}" fill="black" fill-rule="evenodd"/>
-</svg>
-`.trim();
+        // PNG at 1024px resolution is efficient and supports transparency (no black BG issues)
+        const dataUrl = exportCanvas.toDataURL("image/png");
+
+        return `<svg width="${displayWidth}" height="${displayHeight}" viewBox="0 0 ${displayWidth} ${displayHeight}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <path id="blob" d="${pathData}" />
+    <clipPath id="blobClip"><use xlink:href="#blob" /></clipPath>
+  </defs>
+  <rect width="100%" height="100%" fill="white"/>
+  <g clip-path="url(#blobClip)">
+    <image 
+        x="${-visualPixelWidth}" y="${-visualPixelHeight}" 
+        width="${(gridWidth + 2) * visualPixelWidth}" 
+        height="${(gridHeight + 2) * visualPixelHeight}" 
+        href="${dataUrl}"
+        xlink:href="${dataUrl}" 
+        preserveAspectRatio="none"
+    />
+  </g>
+</svg>`.trim();
     };
 
     const exportSVG = () => {
-        const svgContent = getSVGString();
-        const blob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${fileName || 'smooth-pixels'}.svg`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        const blob = new Blob([getSVGString()], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `${getFileName()}.svg`;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
     };
 
     const clearCanvas = () => {
-        saveToHistory();
-        setPixels(new Set());
-        setRoundedCorners(new Set());
-        setBridges([]);
-        setBridgeMap(new Map());
-        setLastActivePixel(null);
+        saveToHistory(); setPixelMap(new Map()); setRoundedCorners(new Set()); setBridges([]); setBridgeMap(new Map()); setHardCongestedCells(new Set()); setSoftCongestedCells(new Set()); setLastActivePixel(null);
     };
 
     // UI helpers
-    const { visualPixelWidth, visualPixelHeight } = getDisplayMetrics();
-    const brushScreenSizeW = brushSize * visualPixelWidth;
-    const brushScreenSizeH = brushSize * visualPixelHeight;
-    const brushCenterOffsetW = Math.floor(brushSize / 2) * visualPixelWidth;
-    const brushCenterOffsetH = Math.floor(brushSize / 2) * visualPixelHeight;
-
-    // Convert cursor grid pos back to screen pos for the div
+    const { visualPixelWidth, visualPixelHeight, displayWidth, displayHeight } = getDisplayMetrics();
     const cursorStyle = {
-        width: `${brushScreenSizeW}px`,
-        height: `${brushScreenSizeH}px`,
-        left: `${cursorX - brushCenterOffsetW}px`,
-        top: `${cursorY - brushCenterOffsetH}px`,
-
-        // Updated Cursor Styling:
-        borderColor: 'white',        // Sharp white border
-        backgroundColor: 'transparent', // Transparent fill so you see underlying grid
-        mixBlendMode: 'difference',   // Difference blend mode to invert colors (white on black, black on white)
-
-        borderRadius: '2px', borderWidth: '1px', borderStyle: 'solid',
-        transition: 'width 0.1s, height 0.1s',
+        width: `${brushSize * visualPixelWidth}px`, height: `${brushSize * visualPixelHeight}px`,
+        left: `${cursorX - (Math.floor(brushSize / 2) * visualPixelWidth)}px`,
+        top: `${cursorY - (Math.floor(brushSize / 2) * visualPixelHeight)}px`,
+        borderColor: 'white', backgroundColor: 'transparent', mixBlendMode: 'difference',
+        borderRadius: '2px', borderWidth: '1px', borderStyle: 'solid', position: 'absolute', pointerEvents: 'none', zIndex: 10,
     };
 
     return (
-        <div className="flex flex-col lg:flex-row items-start justify-center gap-8 p-4 lg:p-8 bg-gray-50 min-h-screen font-sans text-gray-900">
-            <div className="flex flex-col items-center flex-none">
-                <h1 className="text-3xl font-extrabold mb-2 tracking-tight text-center uppercase">Smooth Pixels 2.0</h1>
-                <p className="text-sm text-gray-500 mb-6 text-center max-w-md">Shift+Click for Lines. Shift+Drag for Orthogonal.</p>
-                <div className="flex flex-wrap items-center gap-2 mb-4 w-full max-w-[700px] justify-between">
-                    <div className="flex gap-2">
-                        <button onClick={handleUndo} disabled={history.length === 0} className="p-2 rounded border border-gray-200 bg-white hover:bg-gray-100 disabled:opacity-30 transition shadow-sm text-gray-900"><Undo2 size={18} /></button>
-                        <button onClick={handleRedo} disabled={redoStack.length === 0} className="p-2 rounded border border-gray-200 bg-white hover:bg-gray-100 disabled:opacity-30 transition shadow-sm text-gray-900"><Redo2 size={18} /></button>
-                    </div>
-                    <div className="flex items-center gap-1 bg-white px-3 py-1.5 rounded border border-gray-200 shadow-sm">
-                        <Settings size={14} className="text-gray-500 mr-1" />
-                        <input type="number" min="4" max="128" step="1" value={gridWidth} onChange={(e) => setGridWidth(Number(e.target.value))} className="bg-transparent w-8 text-sm font-bold outline-none text-gray-900 text-right" />
-                        <span className="text-xs text-gray-400">x</span>
-                        <input type="number" min="4" max="128" step="1" value={gridHeight} onChange={(e) => setGridHeight(Number(e.target.value))} className="bg-transparent w-8 text-sm font-bold outline-none text-gray-900 text-right" />
-                        <span className="text-xs font-medium text-gray-500 ml-1">px</span>
-                    </div>
-                </div>
+        <div className="flex flex-col lg:flex-row items-start justify-center gap-12 p-4 lg:p-8 min-h-screen font-sans text-gray-900" style={{ backgroundColor: '#ECECEB' }}>
 
-                {/* Outer Container:
-                   - Fixed min-width/height equal to MAX_DISPLAY_SIZE (700) + Padding.
-                */}
-                <div
-                    className="flex items-center justify-center select-none"
-                    style={{ minWidth: `${MAX_DISPLAY_SIZE + 32}px`, minHeight: `${MAX_DISPLAY_SIZE + 32}px` }}
-                >
-                    {/* Inner Canvas Container:
-                       - Fits the actual canvas size tightly.
-                       - Has the border and shadow.
-                    */}
-                    <div className="relative shadow-xl border-3 border--100 overflow-hidden bg-white" style={{ width: `${displayWidth}px`, height: `${displayHeight}px` }}>
-                        {isCursorVisible && <div className="absolute z-10 pointer-events-none transition-transform duration-50" style={cursorStyle} />}
-                        <canvas
-                            ref={canvasRef}
-                            // Removed 'cursor-none' so standard pointer is visible
-                            className="block touch-none"
-                            style={{ width: '100%', height: '100%' }}
+            <div className="flex flex-col items-center flex-none min-h-[calc(100vh-4rem)]">
+                <div className="flex items-center justify-center select-none mb-4" style={{ width: `${MAX_DISPLAY_SIZE + 32}px`, height: `${MAX_DISPLAY_SIZE + 32}px` }}>
+                    <div className="relative rounded-[3px] overflow-hidden bg-white" style={{ width: displayWidth, height: displayHeight }}>
+                        {isCursorVisible && <div style={cursorStyle} />}
+                        <canvas ref={canvasRef} className="block touch-none" style={{ width: '100%', height: '100%' }}
                             onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp}
-                            onPointerLeave={() => { setIsDrawing(false); setIsCursorVisible(false); }}
-                            onPointerEnter={() => setIsCursorVisible(true)}
+                            onPointerLeave={() => { setIsDrawing(false); setIsCursorVisible(false); }} onPointerEnter={() => setIsCursorVisible(true)}
                         />
                     </div>
                 </div>
-                <div className="mt-2 text-xs text-gray-400 font-medium">
-                    {aspectRatio > 1 ? 'Wide Pixels' : aspectRatio < 1 ? 'Tall Pixels' : 'Square Pixels'} (Ratio: {aspectRatio.toFixed(2)})
+
+                <div className="w-full" style={{ width: `${MAX_DISPLAY_SIZE + 32}px` }}>
+                    <div className="flex flex-wrap items-center gap-6 py-2 justify-between">
+                        <div className="flex items-center gap-2">
+                            <button onClick={handleUndo} disabled={history.length === 0} className="p-2.5 rounded bg-white hover:bg-gray-100 disabled:opacity-30 transition hover:transition-none text-gray-900"><Undo2 size={20} /></button>
+                            <button onClick={handleRedo} disabled={redoStack.length === 0} className="p-2.5 rounded bg-white hover:bg-gray-100 disabled:opacity-30 transition hover:transition-none text-gray-900"><Redo2 size={20} /></button>
+                        </div>
+
+                        <div className="flex items-center gap-4">
+                            <div className="text-[12px] font-normal text-gray-600 w-16 shrink-0">Grid size</div>
+                            <div className="flex items-center gap-2">
+                                <NumberInput min={4} max={128} value={gridWidth} onChange={setGridWidth} className="w-16 text-[11px] font-mono font-normal text-gray-600 bg-white rounded px-1.5 py-0.5 outline-none cursor-ew-resize"
+                                    onMouseDown={(e) => {
+                                        if (e.target === document.activeElement) return;
+                                        const sx = e.clientX;
+                                        const sv = gridWidth;
+                                        const move = (me) => {
+                                            const next = Math.max(4, Math.min(128, sv + Math.round((me.clientX - sx) * 0.2)));
+                                            setGridWidth(next);
+                                        };
+                                        const up = () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); };
+                                        window.addEventListener('mousemove', move);
+                                        window.addEventListener('mouseup', up);
+                                    }}
+                                />
+                                <span className="text-xs text-gray-400">×</span>
+                                <NumberInput min={4} max={128} value={gridHeight} onChange={setGridHeight} className="w-16 text-[11px] font-mono font-normal text-gray-600 bg-white rounded px-1.5 py-0.5 outline-none cursor-ew-resize"
+                                    onMouseDown={(e) => {
+                                        if (e.target === document.activeElement) return;
+                                        const sx = e.clientX;
+                                        const sv = gridHeight;
+                                        const move = (me) => {
+                                            const next = Math.max(4, Math.min(128, sv + Math.round((me.clientX - sx) * 0.2)));
+                                            setGridHeight(next);
+                                        };
+                                        const up = () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); };
+                                        window.addEventListener('mousemove', move);
+                                        window.addEventListener('mouseup', up);
+                                    }}
+                                />
+                            </div>
+                        </div>
+
+
+                    </div>
+                </div>
+
+                <div className="mt-auto w-full text-left pt-6 pb-2" style={{ width: `${MAX_DISPLAY_SIZE + 32}px` }}>
+                    <p className="text-[10px] uppercase tracking-wider font-medium text-gray-400 flex items-center gap-4">
+                        <span><span className="text-gray-900">Shift + Click</span> Line</span>
+                        <span><span className="text-gray-900">Shift + Drag</span> Ortho</span>
+                        <span><span className="text-gray-900">[ ]</span> Size</span>
+                        <span><span className="text-gray-900">B</span> Brush</span>
+                        <span><span className="text-gray-900">E</span> Eraser</span>
+                        <span><span className="text-gray-900">I</span> Picker</span>
+                        <span><span className="text-gray-900">⌘Z</span> Undo</span>
+                    </p>
                 </div>
             </div>
 
-            <div className="w-full max-w-sm flex flex-col gap-5 pt-2">
-
-                {/* Tools Panel */}
-                <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-lg">
-                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Tools</h3>
-                    <div className="flex gap-2 mb-4">
-                        <button onClick={() => setTool('brush')} className={`flex-1 py-2 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition ${tool === 'brush' ? 'bg-black text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}><Brush size={16} /> Draw</button>
-                        <button onClick={() => setTool('eraser')} className={`flex-1 py-2 rounded-lg flex items-center justify-center gap-2 text-sm font-medium transition ${tool === 'eraser' ? 'bg-black text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}><Eraser size={16} /> Erase</button>
+            <div className="w-full max-w-sm flex flex-col gap-12 pt-4">
+                <div>
+                    <div className="flex gap-1.5 mb-5">
+                        <button onClick={() => setTool('brush')} className={`flex-1 py-2 text-[12px] font-normal rounded-lg flex items-center justify-center gap-1 ${tool === 'brush' ? 'bg-black text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}>Brush <span className={`ml-1 font-light ${tool === 'brush' ? 'text-gray-400' : 'text-gray-300'}`}>B</span></button>
+                        <button onClick={() => setTool('eraser')} className={`flex-1 py-2 text-[12px] font-normal rounded-lg flex items-center justify-center gap-1 ${tool === 'eraser' ? 'bg-black text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}>Eraser <span className={`ml-1 font-light ${tool === 'eraser' ? 'text-gray-400' : 'text-gray-300'}`}>E</span></button>
+                        <button onClick={clearCanvas} className="px-3 py-2 rounded-lg bg-white text-gray-400 hover:text-red-500 transition hover:transition-none shadow-sm" title="Clear Canvas"><Trash2 size={16} /></button>
                     </div>
 
-                    <div className="mb-4 space-y-3">
-                        <div>
-                            <div className="flex justify-between items-center mb-1"><span className="text-xs font-medium text-gray-500">Brush Size</span><span className="text-xs font-mono bg-gray-100 px-2 py-1 rounded text-gray-600">{brushSize}</span></div>
-                            <input type="range" min="1" max="6" step="1" value={brushSize} onChange={(e) => setBrushSize(parseInt(e.target.value))} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-black" />
+                    <div className="mb-2">
+                        {/* Static Row: first 5 colors */}
+                        <div className="flex gap-1.5 mb-1.5">
+                            {palette.slice(0, 5).map(c => (
+                                <button key={c} onClick={() => { setCurrentColor(c); setTool('brush'); }} style={{ backgroundColor: c }} className={`flex-1 h-8 rounded hover:scale-105 ${currentColor === c ? 'ring-2 ring-black ring-offset-1' : ''}`} />
+                            ))}
                         </div>
-                        <div>
-                            <div className="flex justify-between items-center mb-1">
-                                <span className="text-xs font-medium text-gray-500 flex items-center gap-1"><Maximize size={10} /> Pixel Ratio</span>
-                                <span className="text-xs font-mono bg-gray-100 px-2 py-1 rounded text-gray-600">{aspectRatio.toFixed(2)}</span>
+
+                        {/* Custom Swatches Row */}
+                        <div className="flex gap-1.5 mb-12">
+                            {customPalette.map((c, idx) => (
+                                <div key={idx} className="relative flex-1 h-8 rounded bg-white flex items-center justify-center overflow-hidden hover:bg-gray-50 group">
+                                    <div className="absolute inset-0" style={{ backgroundColor: c }} onClick={() => { setCurrentColor(c); setTool('brush'); }} />
+                                    <input type="color" value={c} onChange={(e) => {
+                                        const next = [...customPalette];
+                                        next[idx] = e.target.value;
+                                        setCustomPalette(next);
+                                        setCurrentColor(e.target.value);
+                                        setTool('brush');
+                                    }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                                </div>
+                            ))}
+
+                            {customPalette.length < 4 && (
+                                <button
+                                    onClick={() => setCustomPalette([...customPalette, currentColor])}
+                                    className="flex-1 h-8 rounded bg-white text-gray-400 hover:text-gray-500 flex items-center justify-center"
+                                    title="Add Custom Color"
+                                >
+                                    <Plus size={14} />
+                                </button>
+                            )}
+
+                            <button onClick={() => setTool('eyedropper')} className={`flex-1 h-8 rounded flex items-center justify-center ${tool === 'eyedropper' ? 'bg-black text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`} title="Eyedropper"><Pipette size={14} /></button>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-4 mb-4">
+                        <Scrubbable label="Color blur" value={blendPower} onChange={setBlendPower} min={0.1} max={1.0} step={0.01} />
+                        <div className="flex items-center gap-3 flex-1">
+                            <input type="range" min="0.1" max="1" step="0.01" value={blendPower} onChange={(e) => setBlendPower(parseFloat(e.target.value))} className="flex-1 h-3 cursor-pointer accent-black rounded-lg appearance-none [&::-webkit-slider-runnable-track]:h-1 [&::-webkit-slider-runnable-track]:rounded-full" style={{ '--track-bg': '#B2B2B2' }} />
+                            <NumberInput displayScale={100} value={blendPower} onChange={setBlendPower} className="w-16 text-[11px] font-mono font-normal text-gray-600 bg-white rounded px-1.5 py-0.5 outline-none cursor-ew-resize"
+                                onMouseDown={(e) => {
+                                    if (e.target === document.activeElement) return;
+                                    const sx = e.clientX;
+                                    const sv = blendPower;
+                                    const move = (me) => {
+                                        const next = Math.max(0.1, Math.min(1, sv + (me.clientX - sx) * 0.005));
+                                        setBlendPower(next);
+                                    };
+                                    const up = () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); };
+                                    window.addEventListener('mousemove', move);
+                                    window.addEventListener('mouseup', up);
+                                }}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="space-y-4">
+                    <div className="flex items-center gap-4">
+                        <Scrubbable label="Brush size" value={brushSize} onChange={setBrushSize} min={1} max={6} step={1} />
+                        <div className="flex items-center gap-3 flex-1">
+                            <input type="range" min="1" max="6" step="1" value={brushSize} onChange={(e) => setBrushSize(parseInt(e.target.value))} className="flex-1 h-3 cursor-pointer accent-black rounded-lg appearance-none [&::-webkit-slider-runnable-track]:h-1 [&::-webkit-slider-runnable-track]:rounded-full" style={{ '--track-bg': '#B2B2B2' }} />
+                            <NumberInput min={1} max={6} value={brushSize} onChange={setBrushSize} className="w-16 text-[11px] font-mono font-normal text-gray-600 bg-white rounded px-1.5 py-0.5 outline-none cursor-ew-resize"
+                                onMouseDown={(e) => {
+                                    if (e.target === document.activeElement) return;
+                                    const sx = e.clientX;
+                                    const sv = brushSize;
+                                    const move = (me) => {
+                                        const next = Math.max(1, Math.min(6, sv + Math.round((me.clientX - sx) * 0.1)));
+                                        setBrushSize(next);
+                                    };
+                                    const up = () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); };
+                                    window.addEventListener('mousemove', move);
+                                    window.addEventListener('mouseup', up);
+                                }}
+                            />
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <Scrubbable label="Pixel ratio" value={aspectRatio} onChange={setAspectRatio} min={0.25} max={4} step={0.01} />
+                        <div className="flex items-center gap-3 flex-1">
+                            <div className="relative flex-1 group/slider h-3 flex items-center">
+                                <div className="absolute inset-x-0 h-1 rounded-full" style={{ backgroundColor: '#B2B2B2' }} />
+                                <input
+                                    type="range"
+                                    min="-1" max="1" step="0.01"
+                                    value={aspectRatio === 1 ? 0 : (aspectRatio < 1 ? (aspectRatio - 1) / 0.75 : (aspectRatio - 1) / 3)}
+                                    onChange={(e) => {
+                                        const v = parseFloat(e.target.value);
+                                        const snappedV = Math.abs(v) < 0.08 ? 0 : v;
+                                        const mapped = snappedV === 0 ? 1 : (snappedV < 0 ? 1 + snappedV * 0.75 : 1 + snappedV * 3);
+                                        setAspectRatio(mapped);
+                                    }}
+                                    className="relative w-full h-full cursor-pointer accent-black bg-transparent appearance-none"
+                                />
+                                <div className="absolute top-1/2 -translate-y-1/2 left-1/2 w-1 h-1 bg-black/40 rounded-full pointer-events-none group-hover/slider:bg-black/80 transition-colors" />
                             </div>
-                            <input type="range" min="0.25" max="3" step="0.25" value={aspectRatio} onChange={(e) => setAspectRatio(parseFloat(e.target.value))} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-black" />
+                            <NumberInput value={aspectRatio} onChange={setAspectRatio} className="w-16 text-[11px] font-mono font-normal text-gray-600 bg-white rounded px-1.5 py-0.5 outline-none cursor-ew-resize"
+                                onMouseDown={(e) => {
+                                    if (e.target === document.activeElement) return;
+                                    const sx = e.clientX;
+                                    const sv = aspectRatio;
+                                    const move = (me) => {
+                                        const next = Math.max(0.1, sv + (me.clientX - sx) * 0.01);
+                                        setAspectRatio(next);
+                                    };
+                                    const up = () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); };
+                                    window.addEventListener('mousemove', move);
+                                    window.addEventListener('mouseup', up);
+                                }}
+                            />
                         </div>
                     </div>
-
-                    <button onClick={clearCanvas} className="w-full py-2 text-sm rounded border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-black transition flex items-center justify-center gap-2"><Trash2 size={16} /> Clear Canvas</button>
+                    <div className="flex items-center gap-4">
+                        <Scrubbable label="Overlap" value={overlap} onChange={setOverlap} min={-1} max={1} step={0.01} />
+                        <div className="flex items-center gap-3 flex-1">
+                            <div className="relative flex-1 group/slider h-3 flex items-center">
+                                <div className="absolute inset-x-0 h-1 rounded-full" style={{ backgroundColor: '#B2B2B2' }} />
+                                <input
+                                    type="range"
+                                    min="-1" max="1" step="0.01"
+                                    value={overlap}
+                                    onChange={(e) => {
+                                        const v = parseFloat(e.target.value);
+                                        setOverlap(Math.abs(v) < 0.08 ? 0 : v);
+                                    }}
+                                    className="relative w-full h-full cursor-pointer accent-black bg-transparent appearance-none"
+                                />
+                                <div className="absolute top-1/2 -translate-y-1/2 left-1/2 w-1 h-1 bg-black/40 rounded-full pointer-events-none group-hover/slider:bg-black/80 transition-colors" />
+                            </div>
+                            <NumberInput min={-1} max={1} value={overlap} onChange={setOverlap} className="w-16 text-[11px] font-mono font-normal text-gray-600 bg-white rounded px-1.5 py-0.5 outline-none cursor-ew-resize"
+                                onMouseDown={(e) => {
+                                    if (e.target === document.activeElement) return;
+                                    const sx = e.clientX;
+                                    const sv = overlap;
+                                    const move = (me) => {
+                                        const next = Math.max(-1, Math.min(1, sv + (me.clientX - sx) * 0.01));
+                                        setOverlap(next);
+                                    };
+                                }}
+                            />
+                        </div>
+                    </div>
                 </div>
 
-                {/* Algorithm Panel */}
-                <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-lg">
-                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Smoothing</h3>
-                    <div className="grid grid-cols-3 gap-2 mb-6">
-                        {['random', 'outer', 'inner'].map(mode => (
-                            <button key={mode} onClick={() => setCornerMode(mode)} className={`py-2 px-1 text-xs font-bold rounded-md border transition-all capitalize ${cornerMode === mode ? 'bg-black text-white border-black shadow-md' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'}`}>{mode === 'random' ? 'Mixed' : mode === 'outer' ? 'Convex' : 'Concave'}</button>
-                        ))}
-                    </div>
-                    <div className="space-y-6">
-                        <div>
-                            <div className="flex justify-between text-xs text-gray-500 mb-2"><span>Smoothness</span><span className="font-medium text-gray-900">{roundness.toFixed(2)}</span></div>
-                            <input type="range" min="0" max="0.5" step="0.01" value={roundness} onChange={(e) => setRoundness(parseFloat(e.target.value))} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-black" />
+                <div className="space-y-6">
+                    <div className="space-y-1.5">
+                        <div className="flex items-center gap-4">
+                            <div className="text-[12px] font-normal text-gray-600 w-24 shrink-0 pl-4 py-2 pr-1 -ml-4 -my-2 -mr-1">Rendering</div>
+                            <div className="flex gap-1.5 flex-1">
+                                {['inky', 'independent'].map(mode => (
+                                    <button key={mode} onClick={() => setRenderingMode(mode)} className={`flex-1 py-1.5 text-[11px] font-normal rounded-lg ${renderingMode === mode ? 'bg-black text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}>{mode === 'inky' ? 'Inky' : 'Independent'}</button>
+                                ))}
+                            </div>
                         </div>
-                        <div>
-                            <div className="flex justify-between text-xs text-gray-500 mb-2"><span>Probability</span><span className="font-medium text-gray-900">{Math.round(roundedRatio * 100)}%</span></div>
-                            <input type="range" min="0" max="1" step="0.05" value={roundedRatio} onChange={(e) => setRoundedRatio(parseFloat(e.target.value))} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-black" />
+                        <div className="flex items-center gap-4">
+                            <div className="text-[12px] font-normal text-gray-600 w-24 shrink-0 pl-4 py-2 pr-1 -ml-4 -my-2 -mr-1">Smoothing</div>
+                            <div className="flex gap-1.5 flex-1">
+                                {['random', 'outer', 'inner'].map(mode => (
+                                    <button key={mode} onClick={() => setCornerMode(mode)} className={`flex-1 py-1.5 text-[11px] font-normal rounded-lg ${cornerMode === mode ? 'bg-black text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}>{mode === 'random' ? 'Mixed' : mode === 'outer' ? 'Convex' : 'Concave'}</button>
+                                ))}
+                            </div>
                         </div>
-                        <button onClick={() => setSeed(Math.random())} className="w-full py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 transition flex items-center justify-center gap-2 text-sm font-medium"><RefreshCw size={16} /> Shuffle Corners</button>
+                        <div className="flex items-center gap-4">
+                            <div className="w-24 shrink-0 pl-4 pr-1 -ml-4 -mr-1" />
+                            <div className="flex gap-1.5 flex-1">
+                                {['round', 'bevel'].map(type => (
+                                    <button key={type} onClick={() => setCornerType(type)} className={`flex-1 py-1.5 text-[11px] font-normal rounded-lg ${cornerType === type ? 'bg-black text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}>{type}</button>
+                                ))}
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                {/* Export Panel */}
-                <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-lg">
-                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Export</h3>
-                    <div className="flex gap-2">
-                        <input type="text" value={fileName} onChange={(e) => setFileName(e.target.value)} className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-black focus:border-black outline-none" placeholder="filename" />
-                        <button onClick={exportSVG} className="px-4 py-2 rounded-lg bg-black text-white hover:bg-gray-800 transition flex items-center justify-center gap-2 text-sm font-semibold"><FileCode size={18} /> Download SVG</button>
+                    <div className="flex items-center gap-4">
+                        <Scrubbable label="Radius" value={roundness} onChange={setRoundness} min={0} max={0.5} step={0.01} />
+                        <div className="flex items-center gap-3 flex-1">
+                            <input type="range" min="0" max="0.5" step="0.01" value={roundness} onChange={(e) => setRoundness(parseFloat(e.target.value))} className="flex-1 h-3 cursor-pointer accent-black rounded-lg appearance-none [&::-webkit-slider-runnable-track]:h-1 [&::-webkit-slider-runnable-track]:rounded-full" style={{ '--track-bg': '#B2B2B2' }} />
+                            <NumberInput min={0} max={0.5} value={roundness} onChange={setRoundness} className="w-16 text-[11px] font-mono font-normal text-gray-600 bg-white rounded px-1.5 py-0.5 outline-none cursor-ew-resize"
+                                onMouseDown={(e) => {
+                                    if (e.target === document.activeElement) return;
+                                    const sx = e.clientX;
+                                    const sv = roundness;
+                                    const move = (me) => {
+                                        const next = Math.max(0, Math.min(0.5, sv + (me.clientX - sx) * 0.005));
+                                        setRoundness(next);
+                                    };
+                                    const up = () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); };
+                                    window.addEventListener('mousemove', move);
+                                    window.addEventListener('mouseup', up);
+                                }}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                        <Scrubbable label="Probability" value={roundedRatio} onChange={setRoundedRatio} min={0} max={1} step={0.01} />
+                        <div className="flex items-center gap-3 flex-1">
+                            <input type="range" min="0" max="1" step="0.05" value={roundedRatio} onChange={(e) => setRoundedRatio(parseFloat(e.target.value))} className="flex-1 h-3 cursor-pointer accent-black rounded-lg appearance-none [&::-webkit-slider-runnable-track]:h-1 [&::-webkit-slider-runnable-track]:rounded-full" style={{ '--track-bg': '#B2B2B2' }} />
+                            <NumberInput min={0} max={1} value={roundedRatio} onChange={setRoundedRatio} className="w-16 text-[11px] font-mono font-normal text-gray-600 bg-white rounded px-1.5 py-0.5 outline-none cursor-ew-resize"
+                                onMouseDown={(e) => {
+                                    if (e.target === document.activeElement) return;
+                                    const sx = e.clientX;
+                                    const sv = roundedRatio;
+                                    const move = (me) => {
+                                        const next = Math.max(0, Math.min(1, sv + (me.clientX - sx) * 0.01));
+                                        setRoundedRatio(next);
+                                    };
+                                    const up = () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); };
+                                    window.addEventListener('mousemove', move);
+                                    window.addEventListener('mouseup', up);
+                                }}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="pt-2">
+                        <button onClick={() => setSeed(Math.random())} className="w-full py-2 rounded bg-white text-gray-400 hover:text-black transition hover:transition-none flex items-center justify-center gap-2 text-[10px] font-medium tracking-widest uppercase"><RefreshCw size={12} /> Shuffle Seed</button>
+                    </div>
+                    <div className="space-y-2">
+                        <div className="flex gap-2">
+                            <button onClick={exportSVG} className="flex-1 px-4 py-2.5 rounded-lg bg-white hover:bg-gray-50 transition hover:transition-none flex items-center justify-center gap-2 text-[11px] font-medium tracking-wider text-gray-600"><FileCode size={16} /> SVG</button>
+                            <button onClick={() => {
+                                const { displayWidth, displayHeight } = getDisplayMetrics();
+                                const scale = 4;
+                                const canvas = document.createElement('canvas');
+                                canvas.width = displayWidth * scale;
+                                canvas.height = displayHeight * scale;
+                                const ctx = canvas.getContext('2d');
+                                ctx.scale(scale, scale);
+                                drawScene(ctx, true);
+                                const link = document.createElement('a');
+                                link.download = `${getFileName()}.png`;
+                                link.href = canvas.toDataURL('image/png');
+                                link.click();
+                            }} className="flex-1 px-4 py-2.5 rounded-lg bg-white hover:bg-gray-50 transition hover:transition-none flex items-center justify-center gap-2 text-[11px] font-medium tracking-wider text-gray-600"><FileImage size={16} /> PNG</button>
+                        </div>
                     </div>
                 </div>
             </div>

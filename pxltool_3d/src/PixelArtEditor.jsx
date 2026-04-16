@@ -1,9 +1,62 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Trash2, RefreshCw, Undo2, Redo2, FileCode, FileImage, Maximize, Pipette, Plus, Download } from 'lucide-react';
+import * as THREE from 'three';
+import { Canvas, useThree } from '@react-three/fiber';
+import { OrbitControls, PerspectiveCamera, RoundedBox } from '@react-three/drei';
 
 const pseudoRandom = (x, y, s) => {
     const n = Math.sin(x * 12.9 + y * 78.2 + s * 43758) * 43758;
     return n - Math.floor(n);
+};
+
+const PixelVoxel = React.memo(({ position, color, size, radius, depth }) => {
+    return (
+        <RoundedBox args={[size, size, depth]} radius={radius} smoothness={4} position={position}>
+            <meshStandardMaterial color={color} roughness={0.35} metalness={0.05} />
+        </RoundedBox>
+    );
+});
+
+const SDFViewer = ({ pixelMap, gridWidth, gridHeight, params }) => {
+    const pixels = useMemo(() => {
+        const result = [];
+        pixelMap.forEach((color, key) => {
+            const [x, y] = key.split(',').map(Number);
+            const sc = params.sdfCellScale;
+            result.push({
+                key,
+                position: [
+                    (x - gridWidth / 2 + 0.5) * sc,
+                    -(y - gridHeight / 2 + 0.5) * sc,
+                    0
+                ],
+                color
+            });
+        });
+        return result;
+    }, [pixelMap, gridWidth, gridHeight, params.sdfCellScale]);
+
+    const sc = params.sdfCellScale;
+    const expand = 1 + params.sdfExpand * 0.5;
+    const cellSize = sc * expand;
+    const depth = cellSize * 0.6;
+    const maxRadius = Math.min(cellSize, depth) * 0.5;
+    const radius = Math.min(params.sdfRounding * cellSize, maxRadius);
+
+    return (
+        <group>
+            {pixels.map(p => (
+                <PixelVoxel
+                    key={p.key}
+                    position={p.position}
+                    color={p.color}
+                    size={cellSize}
+                    radius={radius}
+                    depth={depth}
+                />
+            ))}
+        </group>
+    );
 };
 
 const NumberInput = ({ value, onChange, className, onMouseDown, min, max, displayScale = 1 }) => {
@@ -133,9 +186,16 @@ const PixelArtEditor = () => {
     const [strokeOrigin, setStrokeOrigin] = useState(null);
     const [overlap, setOverlap] = useState(savedParams.overlap ?? 0);
 
-    const [gridWidth, setGridWidth] = useState(savedParams.gridWidth ?? 16);
-    const [gridHeight, setGridHeight] = useState(savedParams.gridHeight ?? 16);
+    const [gridWidth, setGridWidth] = useState(savedParams.gridWidth ?? 32);
+    const [gridHeight, setGridHeight] = useState(savedParams.gridHeight ?? 32);
     const [customPalette, setCustomPalette] = useState(savedParams.customPalette ?? []);
+
+    // 3D Params
+    const [sdfRounding, setSdfRounding] = useState(savedParams.sdfRounding ?? 0.1);
+    const [sdfExpand, setSdfExpand] = useState(savedParams.sdfExpand ?? 0.0);
+    const [sdfSmoothing, setSdfSmoothing] = useState(savedParams.sdfSmoothing ?? 0.15);
+    const [sdfCellScale, setSdfCellScale] = useState(savedParams.sdfCellScale ?? 0.2);
+    const [viewMode, setViewMode] = useState('2d'); // '2d', '3d', 'split'
 
     // Persistence Effect
     useEffect(() => {
@@ -146,10 +206,10 @@ const PixelArtEditor = () => {
         const params = {
             roundness, roundedRatio, brushSize, currentColor, palette, customPalette,
             cornerMode, cornerType, renderingMode, blendPower, seed, aspectRatio, overlap,
-            gridWidth, gridHeight
+            gridWidth, gridHeight, sdfRounding, sdfExpand, sdfSmoothing, sdfCellScale
         };
         localStorage.setItem('pxltool_params', JSON.stringify(params));
-    }, [roundness, roundedRatio, brushSize, currentColor, palette, customPalette, cornerMode, cornerType, renderingMode, blendPower, seed, aspectRatio, overlap, gridWidth, gridHeight]);
+    }, [roundness, roundedRatio, brushSize, currentColor, palette, customPalette, cornerMode, cornerType, renderingMode, blendPower, seed, aspectRatio, overlap, gridWidth, gridHeight, sdfRounding, sdfExpand, sdfSmoothing, sdfCellScale]);
 
     // Interaction Metadata
     const [cursorX, setCursorX] = useState(0);
@@ -889,16 +949,43 @@ const PixelArtEditor = () => {
         <div className="flex flex-col lg:flex-row items-start justify-center gap-12 p-4 lg:p-8 min-h-screen font-sans text-gray-900" style={{ backgroundColor: '#ECECEB' }}>
 
             <div className="flex flex-col items-center flex-none min-h-[calc(100vh-4rem)]">
-                <div className="flex items-center justify-center select-none mb-4" style={{ width: `${MAX_DISPLAY_SIZE + 32}px`, height: `${MAX_DISPLAY_SIZE + 32}px` }}>
-                    <div className="relative rounded-[3px] overflow-hidden bg-white" style={{ width: displayWidth, height: displayHeight }}>
-                        {isCursorVisible && <div style={cursorStyle} />}
-                        <canvas ref={canvasRef} className="block touch-none" style={{ width: '100%', height: '100%' }}
-                            onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp}
-                            onPointerLeave={() => { setIsDrawing(false); setIsCursorVisible(false); }} onPointerEnter={() => setIsCursorVisible(true)}
-                        />
-                    </div>
+                <div className="flex gap-1.5 mb-4 p-1 bg-white/50 rounded-xl">
+                    <button onClick={() => setViewMode('2d')} className={`px-4 py-1.5 text-[11px] font-medium rounded-lg transition ${viewMode === '2d' ? 'bg-black text-white' : 'text-gray-600 hover:bg-white'}`}>2D Editor</button>
+                    <button onClick={() => setViewMode('3d')} className={`px-4 py-1.5 text-[11px] font-medium rounded-lg transition ${viewMode === '3d' ? 'bg-black text-white' : 'text-gray-600 hover:bg-white'}`}>3D View</button>
+                    <button onClick={() => setViewMode('split')} className={`px-4 py-1.5 text-[11px] font-medium rounded-lg transition ${viewMode === 'split' ? 'bg-black text-white' : 'text-gray-600 hover:bg-white'}`}>Split</button>
                 </div>
 
+                <div className={`flex ${viewMode === 'split' ? 'flex-col lg:flex-row' : ''} gap-8 items-center justify-center select-none mb-4`}>
+
+                    {(viewMode === '2d' || viewMode === 'split') && (
+                        <div className="relative rounded-[3px] overflow-hidden bg-white shadow-xl" style={{ width: displayWidth, height: displayHeight }}>
+                            {isCursorVisible && <div style={cursorStyle} />}
+                            <canvas ref={canvasRef} className="block touch-none" style={{ width: '100%', height: '100%' }}
+                                onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp}
+                                onPointerLeave={() => { setIsDrawing(false); setIsCursorVisible(false); }} onPointerEnter={() => setIsCursorVisible(true)}
+                            />
+                        </div>
+                    )}
+
+                    {(viewMode === '3d' || viewMode === 'split') && (
+                        <div className="relative rounded-[20px] overflow-hidden bg-white shadow-2xl border-8 border-white" style={{ width: viewMode === 'split' ? 400 : displayWidth, height: viewMode === 'split' ? 400 : displayHeight }}>
+                            <Canvas dpr={[1, 2]} gl={{ antialias: true }}>
+                                <PerspectiveCamera makeDefault position={[0, 0, 8]} fov={45} />
+                                <OrbitControls makeDefault enableDamping dampingFactor={0.05} />
+                                <ambientLight intensity={0.6} />
+                                <directionalLight position={[8, 10, 6]} intensity={1.2} />
+                                <directionalLight position={[-4, -2, -3]} intensity={0.3} color="#b0c4de" />
+                                <SDFViewer
+                                    pixelMap={pixelMap}
+                                    gridWidth={gridWidth}
+                                    gridHeight={gridHeight}
+                                    params={{ sdfRounding, sdfExpand, sdfSmoothing, sdfCellScale, renderingMode, currentColor }}
+                                />
+                            </Canvas>
+                            <div className="absolute top-4 left-4 px-2 py-1 bg-black/10 backdrop-blur-md rounded text-[10px] font-bold text-black/40 uppercase tracking-widest pointer-events-none">3D Preview</div>
+                        </div>
+                    )}
+                </div>
                 <div className="w-full" style={{ width: `${MAX_DISPLAY_SIZE + 32}px` }}>
                     <div className="flex flex-wrap items-center gap-6 py-2 justify-between">
                         <div className="flex items-center gap-2">
@@ -1141,8 +1228,46 @@ const PixelArtEditor = () => {
                         </div>
                     </div>
 
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-4">
+                            <div className="text-[12px] font-bold text-black w-24 shrink-0 pl-4 py-2 pr-1 -ml-4 -my-2 -mr-1 uppercase tracking-tighter">3D Params</div>
+                        </div>
+
+                        <div className="flex items-center gap-4">
+                            <Scrubbable label="SDF Rounding" value={sdfRounding} onChange={setSdfRounding} min={0} max={0.5} step={0.01} />
+                            <div className="flex items-center gap-3 flex-1">
+                                <input type="range" min="0" max="0.5" step="0.01" value={sdfRounding} onChange={(e) => setSdfRounding(parseFloat(e.target.value))} className="flex-1 h-3 cursor-pointer accent-black rounded-lg appearance-none [&::-webkit-slider-runnable-track]:h-1 [&::-webkit-slider-runnable-track]:rounded-full" style={{ '--track-bg': '#B2B2B2' }} />
+                                <NumberInput min={0} max={0.5} value={sdfRounding} onChange={setSdfRounding} className="w-16 text-[11px] font-mono font-normal text-gray-600 bg-white rounded px-1.5 py-0.5 outline-none cursor-ew-resize" />
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-4">
+                            <Scrubbable label="Expansion" value={sdfExpand} onChange={setSdfExpand} min={-1} max={1} step={0.01} />
+                            <div className="flex items-center gap-3 flex-1">
+                                <input type="range" min="-1" max="1" step="0.01" value={sdfExpand} onChange={(e) => setSdfExpand(parseFloat(e.target.value))} className="flex-1 h-3 cursor-pointer accent-black rounded-lg appearance-none [&::-webkit-slider-runnable-track]:h-1 [&::-webkit-slider-runnable-track]:rounded-full" style={{ '--track-bg': '#B2B2B2' }} />
+                                <NumberInput min={-1} max={1} value={sdfExpand} onChange={setSdfExpand} className="w-16 text-[11px] font-mono font-normal text-gray-600 bg-white rounded px-1.5 py-0.5 outline-none cursor-ew-resize" />
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-4">
+                            <Scrubbable label="Smoothing" value={sdfSmoothing} onChange={setSdfSmoothing} min={0.01} max={1} step={0.01} />
+                            <div className="flex items-center gap-3 flex-1">
+                                <input type="range" min="0.01" max="1" step="0.01" value={sdfSmoothing} onChange={(e) => setSdfSmoothing(parseFloat(e.target.value))} className="flex-1 h-3 cursor-pointer accent-black rounded-lg appearance-none [&::-webkit-slider-runnable-track]:h-1 [&::-webkit-slider-runnable-track]:rounded-full" style={{ '--track-bg': '#B2B2B2' }} />
+                                <NumberInput min={0.01} max={1} value={sdfSmoothing} onChange={setSdfSmoothing} className="w-16 text-[11px] font-mono font-normal text-gray-600 bg-white rounded px-1.5 py-0.5 outline-none cursor-ew-resize" />
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-4">
+                            <Scrubbable label="Scale" value={sdfCellScale} onChange={setSdfCellScale} min={0.05} max={1} step={0.01} />
+                            <div className="flex items-center gap-3 flex-1">
+                                <input type="range" min="0.05" max="1" step="0.01" value={sdfCellScale} onChange={(e) => setSdfCellScale(parseFloat(e.target.value))} className="flex-1 h-3 cursor-pointer accent-black rounded-lg appearance-none [&::-webkit-slider-runnable-track]:h-1 [&::-webkit-slider-runnable-track]:rounded-full" style={{ '--track-bg': '#B2B2B2' }} />
+                                <NumberInput min={0.05} max={1} value={sdfCellScale} onChange={setSdfCellScale} className="w-16 text-[11px] font-mono font-normal text-gray-600 bg-white rounded px-1.5 py-0.5 outline-none cursor-ew-resize" />
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="flex items-center gap-4">
-                        <Scrubbable label="Radius" value={roundness} onChange={setRoundness} min={0} max={0.5} step={0.01} />
+                        <Scrubbable label="2D Radius" value={roundness} onChange={setRoundness} min={0} max={0.5} step={0.01} />
                         <div className="flex items-center gap-3 flex-1">
                             <input type="range" min="0" max="0.5" step="0.01" value={roundness} onChange={(e) => setRoundness(parseFloat(e.target.value))} className="flex-1 h-3 cursor-pointer accent-black rounded-lg appearance-none [&::-webkit-slider-runnable-track]:h-1 [&::-webkit-slider-runnable-track]:rounded-full" style={{ '--track-bg': '#B2B2B2' }} />
                             <NumberInput min={0} max={0.5} value={roundness} onChange={setRoundness} className="w-16 text-[11px] font-mono font-normal text-gray-600 bg-white rounded px-1.5 py-0.5 outline-none cursor-ew-resize"
