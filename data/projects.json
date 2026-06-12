@@ -1,0 +1,46 @@
+{
+  "aurora": {
+    "title": "Aurora Top 10<br>Teaser & Trophy",
+    "description": "3d motion and physical trophy for the Aurora Tech Award by inDrive — the only startup award for female tech founders in emerging markets. Animated the Top 10 announcement teaser and designed the winners’ statuette, awarded to the top three at the 2026 ceremony in Santiago, Chile."
+  },
+  "dodo-deck": {
+    "title": "Dodo Pizza Dubai<br>Partnership Deck",
+    "description": "Strategic presentation for Dodo Pizza Dubai partnerships. Designed to give partners a comprehensive brand overview. I focused on visual clarity and structuring content for maximum impact, delivering a fully editable template, allowing the team to easily update data and adapt the deck for future partners.",
+    "stats": [
+      { "value": "1 464", "label": "pizza units" },
+      { "value": "26", "label": "countries" }
+    ]
+  },
+  "ipak": {
+    "title": "Ipak Yuli<br>3d System",
+    "description": "3d visual system for a bank. Developed scalable asset library and managed daily production, setting a new visual trend in local banking.",
+    "stats": [
+      { "value": "2.5M", "label": "customers" },
+      { "value": "13×", "label": "reach increase" }
+    ]
+  },
+  "goethe": {
+    "title": "Goethe-Institut Poetry Event",
+    "description": "Reimagined the event symbol into an ethereal 3d bird. The artwork was used for print posters, social media, and as an animated stage backdrop."
+  },
+  "dodo-finance": {
+    "title": "Custom pins for the Dodo Pizza finance team",
+    "description": "Designed to boost internal culture, these enamel pins turn corporate identity into playful, tactile accessories for employees."
+  },
+  "edadeal": {
+    "title": "Edadeal<br>Brand Character",
+    "description": "Evolved the logo into a rigged 3d ecosystem for Yandex’s cashback service. I provide ongoing support for themed expansion packs.",
+    "stats": [
+      { "value": "55M+", "label": "installs" }
+    ]
+  },
+  "wolfram": {
+    "title": "designworkout<br>wolfram74 zine",
+    "titleUrl": "https://kiosk.works/tproduct/265969274982-wolfram74",
+    "description": "Photography, original writing, and foam lettering for a collaborative zine. Exploring the theme of <i>Conjuring</i>, I drew a parallel between hiking endurance and the magical, transformative nature of design."
+  },
+  "kvass": {
+    "title": "Identity for a<br>crafted kvas brand",
+    "description": "A bold fusion of sharp lettering and fluid, Art Nouveau‑inspired rye patterns. The design creates a dynamic rhythm on the aluminum can, modernizing traditional motifs with an elegant edge."
+  }
+}

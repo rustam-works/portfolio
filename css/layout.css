@@ -24,7 +24,7 @@
   margin: 0 auto;
   max-width: 1920px;
 
-  @media (width < 767px) {
+  @media (width < 768px) {
     width: 100%;
     padding: 0 calc(var(--ids__density) * 0.6em);
   }
@@ -32,7 +32,7 @@
   &.L {
     width: 90%;
 
-    @media (width < 767px) {
+    @media (width < 768px) {
       width: 100%;
       padding: 0 calc(var(--ids__density) * 0.6em);
     }
@@ -42,7 +42,7 @@
     width: 100%;
     padding: 0 calc(var(--ids__density) * 0.75em);
 
-    @media (width < 767px) {
+    @media (width < 768px) {
       padding: 0 calc(var(--ids__density) * 0.6em);
     }
   }
@@ -50,7 +50,7 @@
   &.XXL {
     width: 100%;
 
-    @media (width < 767px) {
+    @media (width < 768px) {
       padding: 0;
     }
   }
@@ -58,7 +58,7 @@
   & .ids__text-width {
     width: 85%;
 
-    @media (width < 767px) {
+    @media (width < 768px) {
       width: 100%;
     }
   }
@@ -102,7 +102,7 @@
     --columns: 4;
     width: calc((100% - var(--gap) * (var(--columns) - 1)) / var(--columns));
 
-    @media (width < 767px) {
+    @media (width < 768px) {
       --columns: 2;
     }
   }
@@ -111,7 +111,7 @@
     .ids__sequence-item {
       --columns: 2;
 
-      @media (width < 767px) {
+      @media (width < 768px) {
         --columns: 1;
       }
     }
@@ -121,7 +121,7 @@
     .ids__sequence-item {
       --columns: 3;
 
-      @media (width < 767px) {
+      @media (width < 768px) {
         --columns: 2;
       }
     }
@@ -131,7 +131,7 @@
     .ids__sequence-item {
       --columns: 6;
 
-      @media (width < 767px) {
+      @media (width < 768px) {
         --columns: 3;
       }
     }
@@ -167,46 +167,162 @@ footer {
 /* Media Utilities */
 /* Style moved to ids.css as .ids__media-full */
 
-/* Case Study Layout */
-.case-study__grid {
+/* Anchor scroll offset */
+#dodo-deck, #ipak, #goethe-dodo, #edadeal, #wolfram, #kvass {
+  scroll-margin-top: 2em;
+}
+
+/* Aurora Case */
+.aurora-case {
+  width: 100%;
+}
+
+.aurora-case__visuals {
   display: flex;
+  align-items: stretch;
+  gap: 1em;
+  width: 100%;
+}
+
+.aurora-case__image {
+  display: block;
+  width: 25%;
+  height: auto;
+  object-fit: contain;
+  align-self: center;
+  flex-shrink: 0;
+}
+
+.aurora-case__videos {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5em;
+  min-width: 0;
+}
+
+.aurora-case__video {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 9 / 16;
+  object-fit: cover;
+  display: block;
+  border-radius: var(--ids__radius);
+}
+
+@media (width < 768px) {
+  .aurora-case__visuals {
+    flex-direction: column;
+    gap: 0.5em;
+  }
+
+  .aurora-case__image {
+    width: 60%;
+    align-self: center;
+  }
+}
+
+/* Case Study Layout */
+/* Грид с фиксированными колонками: у всех кейсов текст и фактоиды
+   начинаются с одной и той же точки по X */
+.case-study__grid {
+  display: grid;
+  grid-template-columns: 13em minmax(0, 600px) 1fr;
   gap: 2em;
-  align-items: flex-start;
+  align-items: start;
+}
+
+/* Контакты — свой свободный ряд, как раньше */
+@media (width >= 768px) {
+  #contacts.case-study__grid {
+    display: flex;
+    align-items: flex-start;
+  }
 }
 
 .case-study__title {
   margin: 0;
-  flex-shrink: 0;
+}
+
+/* Кейсы — h2 по смыслу (раздел страницы), но с прежним размером h3 */
+.ids h2.case-study__title {
+  font-size: 1.5em;
+  font-weight: 600;
+  line-height: calc(var(--ids__density) / 1.1);
+}
+
+/* Малые кейсы (Гёте, значки) — h3 по смыслу, с прежним размером h4 */
+.ids h3.case-study__title {
+  font-size: 1.1em;
+  line-height: var(--ids__density);
+}
+
+/* Контакты — крупнее и легче, как раньше */
+.ids #contacts .case-study__title {
+  font-size: 1.8em;
+  font-weight: 400;
+  line-height: calc(var(--ids__density) / 1.2);
 }
 
 .case-study__description {
   flex: 1;
   max-width: 600px;
-  padding-top: 0.5%;
 }
 
-/* Case Study Row (Simurgh + Dodo) */
-.case-study-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 8%;
-  /* Large gap between blocks */
-  width: 100%;
+/* Оптическое выравнивание по верху — как vertical trim в Фигме:
+   срезаем «воздух» над кегельной площадкой первой строки,
+   и заголовок, текст и фактоиды садятся на одну линию */
+@supports (text-box: trim-start cap alphabetic) {
+  .case-study__title,
+  .case-study__description p,
+  .case-study__stat:first-child,
+  .case-study__stat-value {
+    text-box: trim-start cap alphabetic;
+  }
 }
 
-.case-study-item {
-  width: 46%;
-  /* 100% - 8% gap / 2 */
+/* Firefox пока не умеет text-box-trim — оставляем старую компенсацию паддингом */
+@supports not (text-box: trim-start cap alphabetic) {
+  .case-study__description {
+    padding-top: 0.5%;
+  }
+}
+
+/* Case Study Stats (factoids): крупная цифра + подпись-футноут */
+.case-study__stats {
   display: flex;
-  align-items: flex-start;
-  /* Align text top with image top */
+  flex-direction: row;
   gap: 1.5em;
-  /* Smaller gap between image and text */
+  flex-shrink: 0;
+  align-items: flex-start;
+  text-align: left;
 }
 
-/* Goethe Case Study */
-/* .goethe-case uses .case-study-item properties */
+.case-study__stat {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+}
+
+.case-study__stat-value {
+  font-size: 2em;
+  font-weight: 600;
+  /* Тот же вес, что у заголовков кейсов: иерархию делает размер, а не вес */
+  letter-spacing: -0.03em;
+}
+
+/* Подпись — обычный .ids__footnote, здесь только отступ от цифры */
+.case-study__stat-label.ids__footnote {
+  margin-top: 0.2em;
+}
+
+/* Goethe & Dodo — internal flex layout */
+.goethe-case,
+.dodo-case {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.5em;
+}
 
 .goethe-case__container {
   width: 60%;
@@ -252,6 +368,7 @@ footer {
   height: auto;
   flex-shrink: 0;
   margin: -5%;
+  aspect-ratio: 1779 / 1421;
   /* Compensate for PNG whitespace */
 }
 
@@ -262,77 +379,66 @@ footer {
 }
 
 @media (max-width: 1024px) {
-  .case-study-row {
-    gap: 4%;
-  }
-
   /* Specific fix for Dodo header width */
-  .dodo-case__text h4 {
+  .dodo-case__text h3 {
     max-width: 200px;
   }
 }
 
+/* Footnote */
+.ids__footnote {
+  font-size: 0.75em;
+  font-weight: 500;
+  /* Компенсация малого кегля, как у лейблов фактоидов */
+  margin: 0;
+}
+
 /* Sticky CTA */
-/* Sticky CTA */
-.ids__cta {
+/* Селектор .ids .ids__cta сильнее, чем .ids a из ids.css — !important не нужны */
+.ids .ids__cta {
   position: fixed;
   top: 1.5em;
   right: 1.5em;
   z-index: 999;
-  background-color: #EFEFEF;
-  /* Light gray surface */
-  color: #050505 !important;
-  /* Black text, forced to override IDS link color */
+  background-color: rgb(var(--ids__surface-RGB));
+  color: rgb(var(--ids__text-RGB));
   padding: 0.8em 1.2em;
   border-radius: var(--ids__radius);
-  text-decoration: none !important;
-  /* Force override of IDS underline */
+  text-decoration: none;
   font-weight: 500;
   transition: all 0.2s ease;
-  mix-blend-mode: normal;
   border: none;
   white-space: nowrap;
 }
 
-.ids__cta:hover {
-  background-color: #050505;
-  /* Black background */
-  color: #EFEFEF !important;
-  /* Light gray text */
-  text-decoration: none !important;
-  filter: none;
-  /* Remove previous invert */
+.ids .ids__cta:hover {
+  background-color: rgb(var(--ids__text-RGB));
+  color: rgb(var(--ids__surface-RGB));
+  text-decoration: none;
 }
 
-.ids__cta:active {
-  color: #FFFFFF !important;
-  /* White text on press */
+.ids .ids__cta:active {
+  color: rgb(var(--ids__background-RGB));
 }
 
-@media (max-width: 767px) {
-  .ids__cta {
+/* Кнопка прячется, когда контакты уже на экране (см. js/content.js) */
+.ids .ids__cta.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (width < 768px) {
+  .ids .ids__cta {
     top: auto;
     right: auto;
     bottom: 1.5em;
     left: 50%;
     transform: translateX(-50%);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(var(--ids__text-RGB), 0.1);
   }
 
-  /* Smaller titles on mobile for big cases */
-  .ids .case-study__title,
-  .ids .case-study-item h3,
-  .ids .case-study-item h4 {
-    font-size: 1.0em;
-    /* Reduced as requested */
-    line-height: 1.2;
-  }
-
-  .case-study-item {
-    width: 48%;
-    flex-direction: column;
-    /* Stack image/text inside block on tablets? */
-    gap: 1em;
+  .ids .ids__cta.is-hidden {
+    transform: translateX(-50%) translateY(0.5em);
   }
 
   .goethe-case__container,
@@ -346,19 +452,29 @@ footer {
   }
 }
 
-@media (max-width: 767px) {
-  .case-study-row {
-    flex-direction: column;
-    gap: 3em;
+@media (width < 768px) {
+  /* На мобиле грид складывается в одну колонку */
+  .case-study__grid {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+    gap: 0.4em;
   }
 
-  .case-study-item {
-    width: 100%;
-    flex-direction: row;
-    /* Keep side-by-side on mobile?? Or stack? User didn't specify, standard stack is safer for small screens */
+  .goethe-case,
+  .dodo-case {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 0em;
+    gap: 0.4em;
+  }
+
+  .case-study__description {
+    max-width: none;
+    padding-top: 0;
+  }
+
+  .case-study__stats {
+    flex-wrap: wrap;
+    gap: 1.25em 1.5em;
+    margin-top: 0.5em;
   }
 
   .goethe-case__container {
@@ -406,7 +522,7 @@ footer {
 
 /* Reusing .case-study__grid for text, no extra styles needed */
 
-@media (max-width: 767px) {
+@media (width < 768px) {
   .wolfram-spreads {
     flex-direction: column;
     gap: .5em;
@@ -444,7 +560,7 @@ footer {
   height: auto;
   display: block;
   border-radius: 0.3em;
-  /* Minor rounding for slides */
+  aspect-ratio: 3880 / 100;
 }
 
 .dodo-deck-grid {
@@ -513,7 +629,7 @@ footer {
   width: 100%;
 }
 
-@media (max-width: 767px) {
+@media (width < 768px) {
   .dodo-deck-row {
     flex-direction: column;
     gap: 0.5em;
@@ -559,7 +675,7 @@ footer {
   z-index: 1;
 }
 
-@media (max-width: 767px) {
+@media (width < 768px) {
   .edadeal-case {
     flex-direction: column;
   }
@@ -640,7 +756,7 @@ footer {
   z-index: 0;
 }
 
-@media (max-width: 767px) {
+@media (width < 768px) {
   .ipak-v2-case {
     flex-direction: column;
   }
@@ -652,86 +768,23 @@ footer {
     margin-right: 0;
   }
 
+  .ipak-v2-middle {
+    flex-direction: row; /* Icons on the left, Animation on the right */
+    align-items: stretch;
+  }
+
+  .ipak-v2-grid-top {
+    flex: 0 0 35%;
+    width: 35%;
+    height: auto;
+    align-content: center;
+  }
+
   .ipak-v2-grid-bottom {
-    order: -1;
-  }
-}
-
-/* EcoChef Case Study */
-.ecochef-case {
-  display: flex;
-  width: 100%;
-  background-color: #f2f2f2;
-  /* Light gray box background */
-  overflow: hidden;
-  /* Ensures rounded corners clip content */
-  align-items: flex-start;
-  /* Align top edges */
-  justify-content: space-between;
-  /* Distribute any rounding error space */
-}
-
-/* 
-  Calculated widths for equal height (1164px original height for all):
-  Logo: 34.57%
-  Box: 18.92%
-  Van: 24.61%
-  Salad: 21.90%
-*/
-.ecochef-logo {
-  width: 34.57%;
-  height: auto;
-  display: block;
-}
-
-.ecochef-box {
-  width: 18.92%;
-  height: auto;
-  display: block;
-}
-
-.ecochef-van {
-  width: 24.61%;
-  height: auto;
-  display: block;
-}
-
-.ecochef-salad {
-  width: 21.90%;
-  height: auto;
-  display: block;
-}
-
-@media (max-width: 767px) {
-  .ecochef-case {
-    flex-wrap: wrap;
-    justify-content: space-between;
-    /* Ensure outer edges hit */
-    padding: 0;
-    /* Flush fit */
-    box-sizing: border-box;
-  }
-
-  /* Row 1: Logo + Box */
-  .ecochef-logo {
-    width: 64.62%;
-    margin-bottom: 0;
-  }
-
-  .ecochef-box {
-    width: 35.38%;
-    margin-bottom: 0;
-  }
-
-  /* Row 2: Van + Salad */
-  .ecochef-van {
-    width: 52.91%;
-    margin-bottom: 0;
-  }
-
-  .ecochef-salad {
-    width: 47.09%;
-    margin-bottom: 0;
+    flex: 0 0 65%;
+    width: 65%;
+    height: auto;
+    object-fit: cover;
   }
 }
 
@@ -760,7 +813,7 @@ footer {
   display: block;
 }
 
-@media (max-width: 767px) {
+@media (width < 768px) {
   /* Keep same layout on mobile as user didn't specify stack */
   /* If needed, can stack bottom images here */
 }

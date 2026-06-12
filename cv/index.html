@@ -7,18 +7,25 @@
     <title>Rustam Mushraipov - CV</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,400..700;1,400..700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="../css/colors.css">
     <link rel="stylesheet" href="../css/reset.css">
     <link rel="stylesheet" href="../css/settings.css">
     <link rel="stylesheet" href="../css/layout.css">
     <link rel="stylesheet" href="../css/ids.css">
     <style>
-        /* Specific overrides for CV readability */
+        .cv-title-block {
+            width: 300px;
+            flex-shrink: 0;
+            padding-right: 2em;
+            box-sizing: border-box;
+        }
+
         .cv-date {
-            color: #666;
-            margin-top: 0.25em;
-            font-size: 0.9em;
+            font-size: 0.85em;
+            font-weight: 500;
+            margin-top: 0.2em;
         }
 
         .cv-list {
@@ -31,23 +38,13 @@
             margin-bottom: 0.25em;
         }
 
-        .cv-title-block {
-            width: 300px;
-            flex-shrink: 0;
-            padding-right: 2em;
-            box-sizing: border-box;
-        }
-
         .cv-mini-desc {
-            margin-top: 0.5em;
-            font-size: 0.95em;
-            color: #333;
-            line-height: 1.3;
+            font-size: 0.9em;
+            margin-top: 0.4em;
         }
 
-        .cv-languages {
-            font-size: 1em;
-            margin-top: 2em;
+        .case-study__description {
+            max-width: 450px;
         }
 
         @media (max-width: 767px) {
@@ -59,7 +56,6 @@
             .cv-title-block {
                 width: 100%;
                 padding-right: 0;
-                margin-bottom: 0.25em;
             }
         }
     </style>
@@ -69,33 +65,23 @@
     <main>
         <div class="ids__wrapper">
             <div class="ids__space S"></div>
-            <div style="display: flex; flex-direction: row; gap: auto; align-items: flex-start;">
+
+            <div class="ids__hero-header">
+                <div class="ids__hero-portrait-wrapper ids__rounded">
+                    <img src="../images/hero/rustam_portrait_2026_1.webp" alt="Rustam Mushraipov"
+                        class="ids__hero-portrait" width="1177" height="1646">
+                </div>
                 <div class="ids__text-width">
-                    <h1>Rustam Mushraipov</h1>
-                    <h2 class="ids__text-constrained">Designer & Art Director</h2>
-                    <a href="mailto:gecko25101@gmail.com">Email</a> | <a href="https://t.me/rustam_works"
-                        target="_blank">Telegram</a>
+                    <h1><strong>Rustam Mushraipov</strong> — Designer & Art Director. I build "self-driving" visual systems — scalable assets and guidelines that enable brands to maintain high standards autonomously. Track record with brands reaching 55M+ users.</h1>
+                    <p class="ids__text-meta">
+                        <a href="https://t.me/rustam_works" target="_blank">Telegram</a> &nbsp;·&nbsp;
+                        <a href="mailto:gecko25101@gmail.com">Email</a> &nbsp;·&nbsp;
+                        <a href="https://www.linkedin.com/in/rustam-mushraipov/" target="_blank">LinkedIn</a>
+                    </p>
                 </div>
             </div>
 
             <div class="ids__space L"></div>
-
-            <!-- Profile -->
-            <div class="case-study__grid">
-                <div class="case-study__description">
-                    <p>Independent Art Director focused on Identity and 3D. I build "self-driving" visual
-                        systems—scalable assets and guidelines that enable businesses to maintain high standards with
-                        minimal supervision. Track record with brands reaching 55M+ users.</p>
-                </div>
-            </div>
-
-            <div class="ids__space XL"></div>
-
-            <!-- Experience Header -->
-            <div class="ids__text-width">
-                <h2>Experience</h2>
-            </div>
-            <div class="ids__space M"></div>
 
             <!-- Item 1: Independent -->
             <div class="case-study__grid">
@@ -120,7 +106,7 @@
             <div class="case-study__grid">
                 <div class="case-study__title cv-title-block">
                     <h3>Mentor & Technical Curator</h3>
-                    <p class="ids__text-meta" style="margin-top:0.25em;">Method Education</p>
+                    <p class="cv-mini-desc">Method Education</p>
                     <p class="cv-date">2025 — Present</p>
                 </div>
                 <div class="case-study__description">
@@ -137,7 +123,7 @@
             <div class="case-study__grid">
                 <div class="case-study__title cv-title-block">
                     <h3>Communication Designer</h3>
-                    <p class="ids__text-meta" style="margin-top:0.25em;">12Kosmonavtov (Creative Agency)</p>
+                    <p class="cv-mini-desc">12Kosmonavtov (Creative Agency)</p>
                     <p class="cv-date">2023 — Present</p>
                     <p class="cv-mini-desc">Full-cycle design support for <b>Dodo Pizza</b>.</p>
                 </div>
@@ -156,7 +142,7 @@
             <div class="case-study__grid">
                 <div class="case-study__title cv-title-block">
                     <h3>Lead 3D & Visual Designer</h3>
-                    <p class="ids__text-meta" style="margin-top:0.25em;">Baranka (EdTech)</p>
+                    <p class="cv-mini-desc">Baranka (EdTech)</p>
                     <p class="cv-date">2023 — 2024</p>
                 </div>
                 <div class="case-study__description">
@@ -173,7 +159,7 @@
             <div class="case-study__grid">
                 <div class="case-study__title cv-title-block">
                     <h3>Lead Designer</h3>
-                    <p class="ids__text-meta" style="margin-top:0.25em;">Chase Group (ex. Africa Agency)</p>
+                    <p class="cv-mini-desc">Chase Group (ex. Africa Agency)</p>
                     <p class="cv-date">2022 — 2024</p>
                 </div>
                 <div class="case-study__description">
@@ -191,8 +177,8 @@
             <div class="case-study__grid">
                 <div class="case-study__title cv-title-block">
                     <h3>Senior Designer</h3>
-                    <p class="ids__text-meta" style="margin-top:0.25em;">TM Agency</p>
-                    <p class="cv-date">Moscow | 2021</p>
+                    <p class="cv-mini-desc">TM Agency · Moscow</p>
+                    <p class="cv-date">2021</p>
                 </div>
                 <div class="case-study__description">
                     <ul class="cv-list">
@@ -208,8 +194,8 @@
             <div class="case-study__grid">
                 <div class="case-study__title cv-title-block">
                     <h3>Visual Designer</h3>
-                    <p class="ids__text-meta" style="margin-top:0.25em;">Africa Agency</p>
-                    <p class="cv-date">Tashkent | 2019 — 2021</p>
+                    <p class="cv-mini-desc">Africa Agency · Tashkent</p>
+                    <p class="cv-date">2019 — 2021</p>
                 </div>
                 <div class="case-study__description">
                     <ul class="cv-list">
@@ -222,22 +208,21 @@
 
             <!-- Expertise & Stack -->
             <div class="case-study__grid">
-                <div>
-                    <h3 style="font-weight: normal;">Expertise & Stack</h3>
+                <div class="cv-title-block">
+                    <h6>Expertise & Stack</h6>
                 </div>
                 <div class="case-study__description">
                     <p><b>Competencies:</b> Art Direction, Visual Systems, 3D Character Design, Identity, Packaging.</p>
-
-                    <div class="cv-languages">
-                        <span
-                            style="color: #666; display: block; margin-bottom: 0.25em; font-size: 0.9em;">Languages</span>
-                        <p>English, Russian, Uzbek.</p>
-                    </div>
+                    <p><b>Languages:</b> English, Russian, Uzbek.</p>
                 </div>
             </div>
 
             <div class="ids__space XL"></div>
             <div class="ids__space XL"></div>
+
+            <p class="ids__footnote">Rustam Mushraipov © 2026</p>
+
+            <div class="ids__space S"></div>
         </div>
     </main>
 </body>
