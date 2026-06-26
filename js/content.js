@@ -28,6 +28,13 @@ document.querySelectorAll('[data-project]').forEach(container => {
     }
 });
 
+// Ускоряем видео Aurora до 3x (playbackRate нельзя задать атрибутом в HTML)
+document.querySelectorAll('.aurora-case__video').forEach(video => {
+    video.playbackRate = 3;
+    // playbackRate сбрасывается при (пере)загрузке источника — выставляем заново
+    video.addEventListener('loadstart', () => { video.playbackRate = 3; });
+});
+
 // Прячем плавающую кнопку CTA, когда контакты уже на экране
 const cta = document.querySelector('.ids__cta');
 const contacts = document.querySelector('#contacts');

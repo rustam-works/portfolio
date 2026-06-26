@@ -72,23 +72,24 @@
 
             <div class="ids__space L"></div>
 
-            <!-- Aurora Tech Award Case Study — WIP: вёрстка графики ещё не готова, временно скрыто -->
-            <!--
-            <div class="aurora-case" id="aurora">
-                <div class="aurora-case__visuals">
-                    <img loading="lazy" src="images/aurora/award_render_alpha.webp"
-                        alt="Aurora Tech Award trophy" class="aurora-case__image">
+            <!-- Aurora Tech Award Case Study -->
+            <div class="case-study" id="aurora">
+                <div class="aurora-case">
+                    <div class="aurora-case__visuals">
+                        <img loading="lazy" src="images/aurora/award_render_alpha.webp"
+                            alt="Aurora Tech Award trophy" class="aurora-case__image">
 
-                    <div class="aurora-case__videos">
-                        <video autoplay loop muted playsinline class="aurora-case__video">
-                            <source src="images/aurora/petals.webm" type="video/webm">
-                        </video>
-                        <video autoplay loop muted playsinline class="aurora-case__video">
-                            <source src="images/aurora/chisel.webm" type="video/webm">
-                        </video>
-                        <video autoplay loop muted playsinline class="aurora-case__video">
-                            <source src="images/aurora/flying.webm" type="video/webm">
-                        </video>
+                        <div class="aurora-case__videos">
+                            <video autoplay loop muted playsinline class="aurora-case__video">
+                                <source src="images/aurora/petals.webm" type="video/webm">
+                            </video>
+                            <video autoplay loop muted playsinline class="aurora-case__video">
+                                <source src="images/aurora/chisel.webm" type="video/webm">
+                            </video>
+                            <video autoplay loop muted playsinline class="aurora-case__video">
+                                <source src="images/aurora/flying.webm" type="video/webm">
+                            </video>
+                        </div>
                     </div>
                 </div>
 
@@ -101,7 +102,6 @@
             </div>
 
             <div class="ids__space XL"></div>
-            -->
 
 
             <!-- Dodo Deck Case Study -->
@@ -156,42 +156,54 @@
             <div class="ids__space XL"></div>
 
             <!-- IPAK Case Study -->
-            <div class="ipak-v2-case ids__rounded" id="ipak">
-                <!-- Left Column -->
-                <img loading="lazy" src="images/ipak v2/L.webp" class="ipak-v2-l" alt="Ipak Yuli bank — 3d app icon with fan of banknotes" width="1350" height="1350">
+            <div class="case-study" id="ipak">
+                <div class="ipak-v2-case ids__rounded">
+                    <!-- Left Column -->
+                    <img loading="lazy" src="images/ipak v2/L.webp" class="ipak-v2-l" alt="Ipak Yuli bank — 3d app icon with fan of banknotes" width="1350" height="1350">
 
-                <!-- Middle Column -->
-                <div class="ipak-v2-middle">
-                    <div class="ipak-v2-grid-top">
-                        <img loading="lazy" src="images/ipak v2/grid_1.webp" alt="Ipak Yuli — 3d social media post" width="1080" height="1350">
-                        <video autoplay loop muted playsinline>
-                            <source src="images/ipak v2/grid_2.webm" type="video/webm">
-                            <source src="images/ipak v2/grid_2.mp4" type="video/mp4">
+                    <!-- Middle Column -->
+                    <div class="ipak-v2-middle">
+                        <div class="ipak-v2-grid-top">
+                            <img loading="lazy" src="images/ipak v2/grid_1.webp" alt="Ipak Yuli — 3d social media post" width="1080" height="1350">
+                            <video autoplay loop muted playsinline>
+                                <source src="images/ipak v2/grid_2.webm" type="video/webm">
+                                <source src="images/ipak v2/grid_2.mp4" type="video/mp4">
+                            </video>
+                            <img loading="lazy" src="images/ipak v2/grid_3.webp" alt="Ipak Yuli — 3d social media post" width="1080" height="1350">
+                            <img loading="lazy" src="images/ipak v2/grid_4.webp" alt="Ipak Yuli — 3d social media post" width="1080" height="1350">
+                        </div>
+                        <video class="ipak-v2-grid-bottom" autoplay loop muted playsinline>
+                            <source src="images/ipak v2/grid_bottom.webm" type="video/webm">
+                            <source src="images/ipak v2/grid_bottom.mp4" type="video/mp4">
                         </video>
-                        <img loading="lazy" src="images/ipak v2/grid_3.webp" alt="Ipak Yuli — 3d social media post" width="1080" height="1350">
-                        <img loading="lazy" src="images/ipak v2/grid_4.webp" alt="Ipak Yuli — 3d social media post" width="1080" height="1350">
                     </div>
-                    <video class="ipak-v2-grid-bottom" autoplay loop muted playsinline>
-                        <source src="images/ipak v2/grid_bottom.webm" type="video/webm">
-                        <source src="images/ipak v2/grid_bottom.mp4" type="video/mp4">
-                    </video>
+
+                    <!-- Right Column -->
+                    <img src="images/ipak v2/R.webp" class="ipak-v2-r" alt="Ipak Yuli — 3d product illustrations" width="1525" height="1786">
                 </div>
 
-                <!-- Right Column -->
-                <img src="images/ipak v2/R.webp" class="ipak-v2-r" alt="Ipak Yuli — 3d product illustrations" width="1525" height="1786">
-            </div>
+                <div class="ids__space S"></div>
 
-            <div class="ids__space S"></div>
-
-            <div class="case-study__grid" data-project="ipak">
-                <h2 class="case-study__title"></h2>
-                <div class="case-study__description"><p></p></div>
+                <div class="case-study__grid" data-project="ipak">
+                    <h2 class="case-study__title"></h2>
+                    <div class="case-study__description"><p></p></div>
+                </div>
             </div>
 
             <div class="ids__space XL"></div>
 
             <!-- Simurgh & Dodo Row -->
             <div class="ids__sequence XL gap-L" id="goethe-dodo">
+                <!-- Yandex Go Case Study -->
+                <div class="yandex-case ids__sequence-item" data-project="yandex-go">
+                    <img loading="lazy" src="images/yandex_go/yandex_go.webp" alt="3d games icon and power-bank rental renders for the Yandex Go superapp"
+                        class="yandex-case__image" width="2622" height="2105">
+
+                    <div class="yandex-case__text">
+                        <h3 class="case-study__title"></h3>
+                    </div>
+                </div>
+
                 <!-- Goethe Case Study -->
                 <div class="goethe-case ids__sequence-item" data-project="goethe">
                     <div class="goethe-case__container">
@@ -202,42 +214,41 @@
                         </video>
                     </div>
 
-                    <div class="ids__space S mobile-only"></div>
-                    <div>
+                    <div class="goethe-case__text">
                         <h3 class="case-study__title"></h3>
-                        <div class="case-study__description"><p class="goethe-case__text"></p></div>
                     </div>
                 </div>
 
-                <!-- Dodo Finance Merch Case Study -->
+                <!-- Dodo Finance Merch Case Study — временно скрыто, заменено на Yandex Go -->
+                <!--
                 <div class="dodo-case ids__sequence-item" data-project="dodo-finance">
                     <img loading="lazy" src="images/dodo_fin_merch/dodo_pins.webp" alt="Enamel pins for the Dodo Pizza finance team"
                         class="dodo-case__image" width="1779" height="1421">
 
-                    <div class="ids__space S mobile-only"></div>
-
                     <div class="dodo-case__text">
                         <h3 class="case-study__title"></h3>
-                        <div class="case-study__description"><p></p></div>
                     </div>
                 </div>
+                -->
             </div>
 
             <div class="ids__space XL"></div>
 
             <!-- Edadeal Case Study -->
-            <div class="edadeal-case" id="edadeal">
-                <img loading="lazy" src="images/edadeal/edadeal_character.webp" class="edadeal-character"
-                    alt="Edadeal 3d brand character holding a receipt" width="2084" height="2383">
-                <img loading="lazy" src="images/edadeal/edadeal_all.webp" class="edadeal-all ids__rounded"
-                    alt="Edadeal character in app banners and themed scenes" width="2480" height="1960">
-            </div>
+            <div class="case-study" id="edadeal">
+                <div class="edadeal-case">
+                    <img loading="lazy" src="images/edadeal/edadeal_character.webp" class="edadeal-character"
+                        alt="Edadeal 3d brand character holding a receipt" width="2084" height="2383">
+                    <img loading="lazy" src="images/edadeal/edadeal_all.webp" class="edadeal-all ids__rounded"
+                        alt="Edadeal character in app banners and themed scenes" width="2480" height="1960">
+                </div>
 
-            <div class="ids__space S"></div>
+                <div class="ids__space S"></div>
 
-            <div class="case-study__grid" data-project="edadeal">
-                <h2 class="case-study__title"></h2>
-                <div class="case-study__description"><p></p></div>
+                <div class="case-study__grid" data-project="edadeal">
+                    <h2 class="case-study__title"></h2>
+                    <div class="case-study__description"><p></p></div>
+                </div>
             </div>
 
             <div class="ids__space XL"></div>
@@ -264,16 +275,18 @@
             <div class="ids__space XL"></div>
 
             <!-- Kvass Case Study -->
-            <div class="kvass-case ids__rounded" id="kvass">
-                <img src="images/kvass/kvass_top.webp" class="kvass-top" alt="Kvas can design — four views with rye pattern and lettering" width="2080" height="1200">
-                <img src="images/kvass/kvass_L.webp" class="kvass-bottom" alt="Kvas cans in a moulded crate" width="1371" height="857">
-            </div>
+            <div class="case-study" id="kvass">
+                <div class="kvass-case ids__rounded">
+                    <img src="images/kvass/kvass_top.webp" class="kvass-top" alt="Kvas can design — four views with rye pattern and lettering" width="2080" height="1200">
+                    <img src="images/kvass/kvass_L.webp" class="kvass-bottom" alt="Kvas cans in a moulded crate" width="1371" height="857">
+                </div>
 
-            <div class="ids__space S"></div>
+                <div class="ids__space S"></div>
 
-            <div class="case-study__grid" data-project="kvass">
-                <h2 class="case-study__title"></h2>
-                <div class="case-study__description"><p></p></div>
+                <div class="case-study__grid" data-project="kvass">
+                    <h2 class="case-study__title"></h2>
+                    <div class="case-study__description"><p></p></div>
+                </div>
             </div>
 
             <div class="ids__space XL"></div>
