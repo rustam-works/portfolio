@@ -168,7 +168,7 @@ footer {
 /* Style moved to ids.css as .ids__media-full */
 
 /* Anchor scroll offset */
-#dodo-deck, #ipak, #goethe-dodo, #edadeal, #wolfram, #kvass {
+#dodo-deck, #ipak, #goethe-dodo, #yandex-go, #goethe, #edadeal, #wolfram, #kvass {
   scroll-margin-top: 2em;
 }
 
@@ -374,6 +374,9 @@ footer {
   width: 100%;
   flex-shrink: 0;
   position: relative;
+  /* делаем контейнер опорным для cqw — чтобы скругление видео
+     масштабировалось вместе с айпад-безелем */
+  container-type: inline-size;
 }
 
 .goethe-case__bezel {
@@ -392,7 +395,9 @@ footer {
   transform: translate(-50%, -50%);
   width: 93%;
   height: auto;
-  border-radius: 12px;
+  /* радиус как доля ширины контейнера (≈ прежние 12px на десктопе),
+     но пропорционально уменьшается вместе с безелем на узких экранах */
+  border-radius: 2.5cqw;
 }
 
 .goethe-case__text {
