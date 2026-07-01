@@ -20,7 +20,10 @@
 
 .ids__wrapper {
   position: relative;
-  width: 90%;
+  /* Флюидные поля без медиазапросов: ширина линейно идёт от 90% (при 1024px)
+     до 75% (при 1920px). min(90%, …) не даёт раздуться шире 90% на узких экранах,
+     max-width держит верх. Формула: 0.578·vw + 330px проходит через обе точки. */
+  width: min(90%, calc(57.8vw + 330px));
   margin: 0 auto;
   max-width: 1920px;
 
@@ -359,6 +362,15 @@ footer {
   gap: 1em;
 }
 
+/* Зазор между Yandex и Goethe задаём через --gap напрямую (без класса gap-L,
+   который вешал лишний margin-bottom). Вертикаль под рядом — общий ids__space XL,
+   как у остальных секций, поэтому свой margin-bottom обнуляем.
+   На мобилке --gap = вертикальный зазор стопки; на десктопе переопределяется на 3em ниже. */
+#goethe-dodo {
+  --gap: 1.5em;
+  margin-bottom: 0;
+}
+
 /* Иерархия мини-кейсов: Yandex Go — M, Goethe — S (на 40% меньше M).
    Вместе заполняют всю ширину: M + 0.6·M + gap = 100%. Текст не масштабируем. */
 @media (width >= 768px) {
@@ -453,6 +465,13 @@ footer {
   margin-top: 0;
 }
 
+/* Имитация минускульной (old-style) цифры: опускаем «3» в «3d» на половину
+   её высоты ниже базовой линии, не сдвигая остальной текст в строке. */
+.ids__oldstyle-figure {
+  position: relative;
+  top: 0.18em;
+}
+
 /* Footnote */
 .ids__footnote {
   font-size: 0.75em;
@@ -468,11 +487,27 @@ footer {
 }
 
 /* Sticky CTA */
+/* Слот во всю высоту враппера, но position: absolute — не добавляет высоты
+   в поток документа. Даёт кнопке (position: sticky) достаточно места для
+   «прилипания» по вертикали на протяжении всей страницы. pointer-events: none
+   не даёт пустой области слота перехватывать клики по контенту под ней. */
+.ids__cta-slot {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Кнопка сама выравнивается по правому краю через margin-left: auto — без
+   дублирования формулы ширины враппера. Изменится ширина враппера — кнопка
+   последует автоматически. */
 /* Селектор .ids .ids__cta сильнее, чем .ids a из ids.css — !important не нужны */
 .ids .ids__cta {
-  position: fixed;
+  position: sticky;
   top: 1.5em;
-  right: 1.5em;
+  display: block;
+  width: fit-content;
+  margin-left: auto;
+  pointer-events: auto;
   z-index: 999;
   background-color: rgb(var(--ids__surface-RGB));
   color: rgb(var(--ids__text-RGB));
@@ -503,10 +538,14 @@ footer {
 
 @media (width < 768px) {
   .ids .ids__cta {
+    /* На мобиле возвращаем классический fixed — центр по низу вьюпорта,
+       а не sticky-выравнивание по враппер-слоту (нужному только на десктопе) */
+    position: fixed;
     top: auto;
     right: auto;
     bottom: 1.5em;
     left: 50%;
+    margin-left: 0;
     transform: translateX(-50%);
     box-shadow: 0 4px 12px rgba(var(--ids__text-RGB), 0.1);
   }
@@ -575,7 +614,7 @@ footer {
   display: flex;
   justify-content: space-between;
   width: 100%;
-  gap: 1%;
+  gap: 0;
 }
 
 .wolfram-spreads img {
