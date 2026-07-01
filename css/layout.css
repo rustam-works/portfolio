@@ -180,34 +180,41 @@ footer {
 .aurora-case__visuals {
   display: flex;
   align-items: center;
-  gap: 1em;
   width: 100%;
+  position: relative;        /* якорь трофея: его низ — у дна клипов, верх чуть торчит */
+}
+
+.aurora-case__videos {
+  flex: 0 0 77%;             /* ширина блока клипов; справа место под трофей (зазор поменьше) */
+  display: flex;
+  min-width: 0;
 }
 
 .aurora-case__image {
   display: block;
-  width: 16%;
-  height: auto;
-  object-fit: contain;
-  align-self: center;
-  flex-shrink: 0;
-}
-
-.aurora-case__videos {
-  flex: 1;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.5em;
-  min-width: 0;
+  position: absolute;        /* вне потока: не влияет на высоту блока и отступ до текста */
+  right: 0;
+  bottom: 0;                 /* низ трофея — вровень с дном клипов */
+  /* выше ряда клипов на ~3em → чуть торчит сверху.
+     100% = высота ряда клипов. width:auto держит пропорции. */
+  height: calc(100% + 3em);
+  width: auto;
+  z-index: 1000;             /* поверх плавающей кнопки (#4: иллюзия, что награда над ней) */
+  pointer-events: none;      /* клики и ховер проходят сквозь награду к кнопке под ней */
 }
 
 .aurora-case__video {
-  width: 100%;
+  flex: 1 1 0;
+  min-width: 0;
   height: auto;
-  aspect-ratio: 3 / 4;
+  aspect-ratio: 9 / 16;
   object-fit: cover;
   display: block;
-  border-radius: var(--ids__radius);
+}
+
+/* Микро-нахлёст клипов — буквально в пиксель, чтобы не было щели между ними */
+.aurora-case__video:not(:first-child) {
+  margin-left: -1px;
 }
 
 @media (width < 768px) {
@@ -216,9 +223,19 @@ footer {
     gap: 0.5em;
   }
 
+  .aurora-case__videos {
+    flex: 1 1 auto;
+    width: 100%;
+  }
+
+  /* на мобилке трофей возвращается в поток сверху */
   .aurora-case__image {
+    position: static;
+    height: auto;
     width: 30%;
+    transform: none;
     align-self: center;
+    order: 0;
   }
 }
 
@@ -233,10 +250,14 @@ footer {
    начинаются с одной и той же точки по X */
 .case-study__grid {
   display: grid;
-  grid-template-columns: 13em minmax(0, 600px) 1fr;
+  /* Меру строки несёт сам <p> (max-width: 60ch от его 0.9em-шрифта).
+     Колонка описания ужимается по контенту (max-content = те же 60 знаков),
+     чтобы ячейка грида была равна тексту, а не шире него. */
+  grid-template-columns: 13em minmax(0, max-content) 1fr;
   gap: 2em;
   align-items: start;
 }
+
 
 /* Контакты — свой свободный ряд, как раньше */
 @media (width >= 768px) {
@@ -272,9 +293,11 @@ footer {
   line-height: calc(var(--ids__density) / 1.2);
 }
 
+/* Описание — сам <p> (без обёртки), поэтому мера в ch считается от его шрифта:
+   ~60 знаков на любой ширине окна, и колонка грида ужимается ровно до текста. */
 .case-study__description {
   flex: 1;
-  max-width: 600px;
+  max-width: 60ch;
 }
 
 /* Оптическое выравнивание по верху — как vertical trim в Фигме:
@@ -282,9 +305,10 @@ footer {
    и заголовок, текст и фактоиды садятся на одну линию */
 @supports (text-box: trim-start cap alphabetic) {
   .case-study__title,
-  .case-study__description p,
+  .case-study__description,
   .case-study__stat:first-child,
-  .case-study__stat-value {
+  .case-study__stat-value,
+  .aurora-credits {
     text-box: trim-start cap alphabetic;
   }
 }
@@ -435,6 +459,12 @@ footer {
   font-weight: 500;
   /* Компенсация малого кегля, как у лейблов фактоидов */
   margin: 0;
+}
+
+/* Атрибуция Aurora — 3-я колонка грида (на месте фактоидов).
+   line-height для читабельности двух строк подряд. */
+.aurora-credits {
+  line-height: 1.4;
 }
 
 /* Sticky CTA */
@@ -591,7 +621,7 @@ footer {
 }
 
 .dodo-deck-visuals {
-  background: linear-gradient(0deg, rgba(255, 105, 0, 1) 0%, rgba(244, 245, 246, 1) 93%);
+  background: linear-gradient(0deg, rgba(255, 105, 0, 1) 0%, rgba(240, 244, 250, 1) 93%);
   /* Light gray container */
   padding: 0.5em;
   /* Container padding */

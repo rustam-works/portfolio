@@ -12,7 +12,7 @@ document.querySelectorAll('[data-project]').forEach(container => {
             : data.title;
     }
 
-    const descEl = container.querySelector('.case-study__description p');
+    const descEl = container.querySelector('.case-study__description');
     if (descEl) descEl.innerHTML = data.description;
 
     if (data.stats?.length) {
@@ -28,11 +28,12 @@ document.querySelectorAll('[data-project]').forEach(container => {
     }
 });
 
-// Ускоряем видео Aurora до 3x (playbackRate нельзя задать атрибутом в HTML)
+// Скорость видео Aurora — по-клипно через data-speed (playbackRate нельзя задать атрибутом в HTML)
 document.querySelectorAll('.aurora-case__video').forEach(video => {
-    video.playbackRate = 3;
+    const speed = parseFloat(video.dataset.speed) || 1;
+    video.playbackRate = speed;
     // playbackRate сбрасывается при (пере)загрузке источника — выставляем заново
-    video.addEventListener('loadstart', () => { video.playbackRate = 3; });
+    video.addEventListener('loadstart', () => { video.playbackRate = speed; });
 });
 
 // Прячем плавающую кнопку CTA, когда контакты уже на экране
