@@ -220,25 +220,45 @@ footer {
   margin-left: -1px;
 }
 
+/* Мобилка: клипы стопкой слева, трофей справа, всё в один экран.
+   Высота блока задаётся от вьюпорта (--h); трофей, как на десктопе, вне потока
+   и чуть торчит сверху. Ширина трофея выводится из его пропорции (1200×3840 = 0.3125),
+   остальное — колонке клипов; клипы обрезаются по высоте через object-fit. */
 @media (width < 768px) {
   .aurora-case__visuals {
-    flex-direction: column;
-    gap: 0.5em;
+    --h: min(82svh, 40em);
+    --trophy-h: calc(var(--h) + 1.5em);
+    --gap: 0.5em;
+    align-items: flex-end;
+    height: var(--h);
   }
 
   .aurora-case__videos {
-    flex: 1 1 auto;
-    width: 100%;
+    flex: none;
+    flex-direction: column;
+    gap: 0;
+    width: calc(100% - var(--trophy-h) * 0.3125 - var(--gap));
+    height: 100%;
   }
 
-  /* на мобилке трофей возвращается в поток сверху */
+  .aurora-case__video {
+    flex: 1 1 0;
+    min-height: 0;
+    width: 100%;
+    aspect-ratio: auto;
+  }
+
+  /* Стопка без щелей: тот же пиксельный нахлёст, что на десктопе, но по вертикали */
+  .aurora-case__video:not(:first-child) {
+    margin-left: 0;
+    margin-top: -1px;
+  }
+
+  /* У картинки трофея ~1.35% прозрачного поля снизу — компенсируем лёгким минусом,
+     чтобы основание визуально село на линию дна клипов. */
   .aurora-case__image {
-    position: static;
-    height: auto;
-    width: 30%;
-    transform: none;
-    align-self: center;
-    order: 0;
+    height: var(--trophy-h);
+    bottom: calc(var(--trophy-h) * -0.02);
   }
 }
 
@@ -262,14 +282,6 @@ footer {
 }
 
 
-/* Контакты — свой свободный ряд, как раньше */
-@media (width >= 768px) {
-  #contacts.case-study__grid {
-    display: flex;
-    align-items: flex-start;
-  }
-}
-
 .case-study__title {
   margin: 0;
 }
@@ -287,13 +299,6 @@ footer {
   line-height: var(--ids__density);
   /* Удерживаем строку в комфортной длине */
   max-width: 42ch;
-}
-
-/* Контакты — крупнее и легче, как раньше */
-.ids #contacts .case-study__title {
-  font-size: 1.8em;
-  font-weight: 400;
-  line-height: calc(var(--ids__density) / 1.2);
 }
 
 /* Описание — сам <p> (без обёртки), поэтому мера в ch считается от его шрифта:
@@ -349,6 +354,43 @@ footer {
 /* Подпись — обычный .ids__footnote, здесь только отступ от цифры */
 .case-study__stat-label.ids__footnote {
   margin-top: 0.2em;
+}
+
+/* Контакты — двухколонник: слева заголовок + абзац, справа адреса.
+   Адреса — те же ссылки, что и везде, только крупнее и легче; без подписей. */
+.contacts {
+  display: grid;
+  /* Первая колонка — по ширине абзаца (мера ниже), остальное адресам */
+  grid-template-columns: minmax(0, max-content) 1fr;
+  gap: 2em;
+  align-items: start;
+}
+
+.contacts__text .case-study__description {
+  margin-top: 0.6em;
+  max-width: 34ch;
+}
+
+.contacts__links {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35em;
+  min-width: 0;
+}
+
+.ids .contacts__link {
+  font-size: 1.25em;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: calc(var(--ids__density) / 1.2);
+  overflow-wrap: anywhere;
+}
+
+@supports (text-box: trim-start cap alphabetic) {
+  .contacts__link:first-child {
+    text-box: trim-start cap alphabetic;
+  }
 }
 
 /* Goethe, Dodo, Yandex — кейс-блок: картинка + подпись в одном контейнере.
@@ -486,6 +528,18 @@ footer {
   line-height: 1.4;
 }
 
+/* На десктопе колонка кредитов берёт ширину строки целиком (max-content),
+   а описание отдаёт остаток — иначе имя и должность ссыпаются в столбик. */
+@media (width >= 768px) {
+  .case-study__grid[data-project="aurora"] {
+    grid-template-columns: 13em minmax(0, 1fr) max-content;
+  }
+
+  .aurora-credits {
+    white-space: nowrap;
+  }
+}
+
 /* Sticky CTA */
 /* Слот во всю высоту враппера, но position: absolute — не добавляет высоты
    в поток документа. Даёт кнопке (position: sticky) достаточно места для
@@ -589,6 +643,11 @@ footer {
     flex-wrap: wrap;
     gap: 1.25em 1.5em;
     margin-top: 0.5em;
+  }
+
+  .contacts {
+    grid-template-columns: 1fr;
+    gap: 1.2em;
   }
 
   .goethe-case__container {

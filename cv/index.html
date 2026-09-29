@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rustam Mushraipov - CV</title>
+    <title>Rustam Mushraipov — CV</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,400..700;1,400..700&display=swap"
@@ -15,47 +15,71 @@
     <link rel="stylesheet" href="../css/layout.css">
     <link rel="stylesheet" href="../css/ids.css">
     <style>
-        .cv-title-block {
-            width: 300px;
-            flex-shrink: 0;
-            padding-right: 2em;
-            box-sizing: border-box;
-        }
+        /* Раскладку позиций целиком держит общий .case-study__grid с главной
+           (13em / текст / остаток). Здесь — только то, чего у кейсов нет. */
 
-        .cv-date {
-            font-size: 0.85em;
-            font-weight: 500;
-            margin-top: 0.2em;
-        }
-
-        .cv-list {
-            list-style-type: disc;
-            margin-left: 1.25em;
-            margin-top: 0.5em;
-        }
-
-        .cv-list li {
-            margin-bottom: 0.25em;
-        }
-
-        .cv-mini-desc {
-            font-size: 0.9em;
+        /* Шапка позиции: должность (h3.case-study__title, 1.1em как у малых кейсов),
+           под ней компания и годы — тем же кеглем и весом, что основной текст */
+        .cv-item__meta {
             margin-top: 0.4em;
         }
 
-        .case-study__description {
-            max-width: 450px;
+        .cv-item__meta,
+        .cv-item__body p:last-child {
+            margin-bottom: 0;
         }
 
-        @media (max-width: 767px) {
-            .case-study__grid {
-                flex-direction: column;
-                gap: 0.5em;
+        /* Мера ~60 знаков, как у описаний на главной: считаем её от кегля абзаца (0.9em),
+           а не от контейнера, иначе строка выходит ~77 знаков */
+        .cv-item__body {
+            max-width: none;
+        }
+
+        .cv-item__body p {
+            max-width: 60ch;
+        }
+
+        /* Контакты строкой под био: кегль основного текста (при 1.25em, как на главной,
+           три ссылки не влезают в колонку). Выравнивание по базовой линии;
+           обрезку «воздуха» у первой ссылки, нужную только в столбике, отключаем —
+           иначе почта встаёт на 4px выше соседей. */
+        .cv-contacts {
+            margin-top: 0.75em;
+            flex-direction: row;
+            flex-wrap: wrap;
+            align-items: baseline;
+            gap: 0.3em 1em;
+        }
+
+        .ids .cv-contacts .contacts__link {
+            font-size: 1em;
+            letter-spacing: normal;
+        }
+
+        .cv-contacts .contacts__link:first-child {
+            text-box: normal;
+        }
+
+        /* На мобиле позиции идут одной колонкой, и шапка сливается с текстом
+           предыдущей — зазор между позициями берём как L вместо M */
+        @media (width < 768px) {
+            .cv-item + .ids__space.M {
+                height: calc(var(--ids__density) * 2.4em);
+            }
+        }
+
+        /* Печать / сохранение в PDF */
+        @media print {
+            .ids__hero-portrait-wrapper {
+                width: 20%;
             }
 
-            .cv-title-block {
-                width: 100%;
-                padding-right: 0;
+            .cv-item {
+                break-inside: avoid;
+            }
+
+            .ids a {
+                text-decoration: none;
             }
         }
     </style>
@@ -72,155 +96,128 @@
                         class="ids__hero-portrait" width="1177" height="1646">
                 </div>
                 <div class="ids__text-width">
-                    <h1><strong>Rustam Mushraipov</strong> — Designer & Art Director. I build "self-driving" visual systems — scalable assets and guidelines that enable brands to maintain high standards autonomously. Track record with brands reaching 55M+ users.</h1>
-                    <p class="ids__text-meta">
-                        <a href="https://t.me/rustam_works" target="_blank">Telegram</a> &nbsp;·&nbsp;
-                        <a href="mailto:gecko25101@gmail.com">Email</a> &nbsp;·&nbsp;
-                        <a href="https://www.linkedin.com/in/rustam-mushraipov/" target="_blank">LinkedIn</a>
-                    </p>
+                    <h1><strong>Rustam Mushraipov</strong> — independent art director &amp;&nbsp;designer specialized in communication design, identity, and <span class="ids__oldstyle-figure">3</span>d graphics.</h1>
+                    <p class="ids__text-meta">Worked with Yandex, Dodo Pizza, and the Aurora Tech Award by inDrive.</p>
+                    <!-- Почта — адресом (читается в распечатке/PDF), Telegram и LinkedIn — словами -->
+                    <div class="contacts__links cv-contacts">
+                        <a class="contacts__link" href="mailto:rustam.mushraipov@gmail.com">rustam.mushraipov@gmail.com</a>
+                        <a class="contacts__link" href="https://t.me/rustam_works" target="_blank" rel="noopener">Telegram</a>
+                        <a class="contacts__link" href="https://www.linkedin.com/in/rustam-mushraipov/" target="_blank" rel="noopener">LinkedIn</a>
+                    </div>
                 </div>
             </div>
 
             <div class="ids__space L"></div>
 
-            <!-- Item 1: Independent -->
-            <div class="case-study__grid">
-                <div class="case-study__title cv-title-block">
-                    <h3>Independent Designer</h3>
-                    <p class="cv-date">2021 — Present</p>
-                    <p class="cv-mini-desc">Partnering with clients to deliver Identity and 3D solutions.</p>
-                </div>
-                <div class="case-study__description">
-                    <ul class="cv-list">
-                        <li><b>Yandex.Edadeal:</b> Evolved a 2D logo into a 3D mascot system for national campaigns
-                            (55M+ installs). Providing ongoing art direction for seasonal packs.</li>
-                        <li><b>Commercial Projects:</b> Delivered identities and packaging concepts for various
-                            international and local clients.</li>
-                    </ul>
-                </div>
-            </div>
+            <!-- Шаблон позиции: должность / компания · город / годы; справа абзацы.
+                 Жирным — только клиент в начале абзаца. Диапазоны лет — короткое тире. -->
 
-            <div class="ids__space L"></div>
+            <section class="case-study__grid cv-item">
+                <div>
+                    <h3 class="case-study__title">Independent Designer</h3>
+                    <p class="cv-item__meta">Freelance, directly and through studios<br>2021–present</p>
+                </div>
+                <div class="case-study__description cv-item__body">
+                    <p><b>Aurora Tech Award by inDrive:</b> 3d motion for the Top&nbsp;10 announcement teaser and the design of the winners’ trophy, awarded at the 2026 ceremony in Santiago, Chile.</p>
+                    <p><b>Yandex Go:</b> a 3d gamepad icon for Yandex Games, remodelled from scratch in Plasticity with the ro—jo studio, and 3d onboarding renders for the power-bank rental launch.</p>
+                    <p><b>Yandex Edadeal:</b> turned the 2d logo into a rigged 3d character for a product with 55M+ installs, documented the rig in a Figma guide for the client’s team, and produced regular renders and campaign visuals with it.</p>
+                </div>
+            </section>
 
-            <!-- Item: Method Education -->
-            <div class="case-study__grid">
-                <div class="case-study__title cv-title-block">
-                    <h3>Mentor & Technical Curator</h3>
-                    <p class="cv-mini-desc">Method Education</p>
-                    <p class="cv-date">2025 — Present</p>
-                </div>
-                <div class="case-study__description">
-                    <ul class="cv-list">
-                        <li>Mentored students in 3D pipelines (Blender/C4D), bridging the gap between creative concepts
-                            and technical execution.</li>
-                    </ul>
-                </div>
-            </div>
+            <div class="ids__space M"></div>
 
-            <div class="ids__space L"></div>
+            <section class="case-study__grid cv-item">
+                <div>
+                    <h3 class="case-study__title">Teaching Assistant and Course Author</h3>
+                    <p class="cv-item__meta">Method Education<br>2025–present</p>
+                </div>
+                <div class="case-study__description cv-item__body">
+                    <p><b>Highlighter course:</b> recorded all 11 lessons on modelling a marker in Plasticity and rendering it in Blender and Cinema&nbsp;4D.</p>
+                    <p><b>Alchemy course:</b> exercise examples, short how-to videos, technical help for students, and generative setups rebuilt from Cinema&nbsp;4D in Blender, first as an assistant, then as co-curator.</p>
+                </div>
+            </section>
 
-            <!-- Item: 12Kosmonavtov -->
-            <div class="case-study__grid">
-                <div class="case-study__title cv-title-block">
-                    <h3>Communication Designer</h3>
-                    <p class="cv-mini-desc">12Kosmonavtov (Creative Agency)</p>
-                    <p class="cv-date">2023 — Present</p>
-                    <p class="cv-mini-desc">Full-cycle design support for <b>Dodo Pizza</b>.</p>
-                </div>
-                <div class="case-study__description">
-                    <ul class="cv-list">
-                        <li>Designed the strategic partnership deck for <b>Dodo Dubai</b>.</li>
-                        <li>Creating digital ads and merchandise while ensuring consistency across high-volume
-                            deliverables.</li>
-                    </ul>
-                </div>
-            </div>
+            <div class="ids__space M"></div>
 
-            <div class="ids__space L"></div>
+            <section class="case-study__grid cv-item">
+                <div>
+                    <h3 class="case-study__title">Communication Designer</h3>
+                    <p class="cv-item__meta">12Kosmonavtov · Dodo Pizza<br>2023–present</p>
+                </div>
+                <div class="case-study__description cv-item__body">
+                    <p><b>Dodo Pizza Dubai:</b> a partnership deck built as an editable Google Slides template the team adapts for new partners.</p>
+                    <p>Digital ads, enamel pins, and restaurant materials for Dodo Pizza.</p>
+                </div>
+            </section>
 
-            <!-- Item: Baranka -->
-            <div class="case-study__grid">
-                <div class="case-study__title cv-title-block">
-                    <h3>Lead 3D & Visual Designer</h3>
-                    <p class="cv-mini-desc">Baranka (EdTech)</p>
-                    <p class="cv-date">2023 — 2024</p>
-                </div>
-                <div class="case-study__description">
-                    <ul class="cv-list">
-                        <li>Built a scalable <b>3D illustration system</b> allowing the product team to autonomously
-                            generate marketing assets.</li>
-                    </ul>
-                </div>
-            </div>
+            <div class="ids__space M"></div>
 
-            <div class="ids__space L"></div>
+            <section class="case-study__grid cv-item">
+                <div>
+                    <h3 class="case-study__title">3d Designer</h3>
+                    <p class="cv-item__meta">Baranka · Online driving school<br>2023–2024</p>
+                </div>
+                <div class="case-study__description cv-item__body">
+                    <p>Built a Figma library of stylized 3d illustrations that the in-house UI/UX and communication designers used to assemble site pages, posts, and banners on their own.</p>
+                    <p>Detailed 3d covers for the lessons in the app.</p>
+                </div>
+            </section>
 
-            <!-- Item: Chase Group -->
-            <div class="case-study__grid">
-                <div class="case-study__title cv-title-block">
-                    <h3>Lead Designer</h3>
-                    <p class="cv-mini-desc">Chase Group (ex. Africa Agency)</p>
-                    <p class="cv-date">2022 — 2024</p>
-                </div>
-                <div class="case-study__description">
-                    <ul class="cv-list">
-                        <li><b>Key Case:</b> Rebranded <b>Ipak Yuli Bank</b> (2.5M users) to a 3D-first language.</li>
-                        <li>Built the pipeline and trained the team, driving a <b>13x social reach increase</b>.</li>
-                        <li>Migrated the design workflow to Figma.</li>
-                    </ul>
-                </div>
-            </div>
+            <div class="ids__space M"></div>
 
-            <div class="ids__space L"></div>
+            <section class="case-study__grid cv-item">
+                <div>
+                    <h3 class="case-study__title">Lead Designer</h3>
+                    <p class="cv-item__meta">Chase Group (ex. Africa Agency) · Tashkent<br>2022–2024</p>
+                </div>
+                <div class="case-study__description cv-item__body">
+                    <p><b>Ipak Yuli Bank:</b> developed a 3d visual language for a bank serving 2.5M customers. It spread from social media to web banners, app push notifications, and billboards.</p>
+                    <p>Set up the daily production pipeline and trained an intern to take it over. Contributed to 13× growth in average monthly organic reach.</p>
+                    <p>Moved the agency’s designers and client projects from Photoshop to Figma.</p>
+                </div>
+            </section>
 
-            <!-- Item: TM Agency -->
-            <div class="case-study__grid">
-                <div class="case-study__title cv-title-block">
-                    <h3>Senior Designer</h3>
-                    <p class="cv-mini-desc">TM Agency · Moscow</p>
-                    <p class="cv-date">2021</p>
-                </div>
-                <div class="case-study__description">
-                    <ul class="cv-list">
-                        <li>Created key visuals and motion graphics for <b>Pochta Bank</b> and <b>Rappoport
-                                Restaurants</b>.</li>
-                    </ul>
-                </div>
-            </div>
+            <div class="ids__space M"></div>
 
-            <div class="ids__space L"></div>
+            <section class="case-study__grid cv-item">
+                <div>
+                    <h3 class="case-study__title">Communication Designer</h3>
+                    <p class="cv-item__meta">TM Agency · Moscow<br>2021</p>
+                </div>
+                <div class="case-study__description cv-item__body">
+                    <p>Social media, key visuals, and motion as part of the agency team, including work for Pochta Bank and Rappoport Restaurants.</p>
+                </div>
+            </section>
 
-            <!-- Item: Africa Agency -->
-            <div class="case-study__grid">
-                <div class="case-study__title cv-title-block">
-                    <h3>Visual Designer</h3>
-                    <p class="cv-mini-desc">Africa Agency · Tashkent</p>
-                    <p class="cv-date">2019 — 2021</p>
+            <div class="ids__space M"></div>
+
+            <section class="case-study__grid cv-item">
+                <div>
+                    <h3 class="case-study__title">Graphic Designer</h3>
+                    <p class="cv-item__meta">Africa Agency · Tashkent<br>2019–2021</p>
                 </div>
-                <div class="case-study__description">
-                    <ul class="cv-list">
-                        <li>Executed identity and SMM design for local banking clients.</li>
-                    </ul>
+                <div class="case-study__description cv-item__body">
+                    <p>Social media design for banks, including Tenge Bank and Hamkor Bank.</p>
                 </div>
-            </div>
+            </section>
 
             <div class="ids__space XL"></div>
 
-            <!-- Expertise & Stack -->
-            <div class="case-study__grid">
-                <div class="cv-title-block">
-                    <h6>Expertise & Stack</h6>
+            <section class="case-study__grid cv-item">
+                <div>
+                    <h3 class="case-study__title">Expertise</h3>
                 </div>
-                <div class="case-study__description">
-                    <p><b>Competencies:</b> Art Direction, Visual Systems, 3D Character Design, Identity, Packaging.</p>
-                    <p><b>Languages:</b> English, Russian, Uzbek.</p>
+                <div class="case-study__description cv-item__body">
+                    <p><b>Competencies:</b> art direction, communication design, 3d illustration and motion, 3d characters.</p>
+                    <p><b>Tools:</b> Blender, Cinema&nbsp;4D + Redshift, Plasticity, Figma, Photoshop, Illustrator, After Effects.</p>
+                    <p><b>Languages:</b> Russian and Uzbek (native), English (working proficiency).</p>
                 </div>
-            </div>
+            </section>
 
             <div class="ids__space XL"></div>
             <div class="ids__space XL"></div>
 
-            <p class="ids__footnote">Rustam Mushraipov © 2026</p>
+            <p class="ids__footnote">Rustam Mushraipov ©&nbsp;2026</p>
 
             <div class="ids__space S"></div>
         </div>
