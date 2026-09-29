@@ -16,26 +16,28 @@
     <link rel="stylesheet" href="../css/ids.css">
     <style>
         /* Раскладку позиций целиком держит общий .case-study__grid с главной
-           (13em / текст / остаток). Здесь — только то, чего у кейсов нет. */
+           (13em / текст / остаток). Здесь — только то, чего у кейсов нет.
+           Все правила с префиксом .ids: в сборке Vite общий CSS подключается ПОСЛЕ
+           этого <style>, и при равной специфичности перебивал бы его. */
 
         /* Шапка позиции: должность (h3.case-study__title, 1.1em как у малых кейсов),
            под ней компания и годы — тем же кеглем и весом, что основной текст */
-        .cv-item__meta {
+        .ids .cv-item__meta {
             margin-top: 0.4em;
         }
 
-        .cv-item__meta,
-        .cv-item__body p:last-child {
+        .ids .cv-item__meta,
+        .ids .cv-item__body p:last-child {
             margin-bottom: 0;
         }
 
         /* Мера ~60 знаков, как у описаний на главной: считаем её от кегля абзаца (0.9em),
            а не от контейнера, иначе строка выходит ~77 знаков */
-        .cv-item__body {
+        .ids .cv-item__body {
             max-width: none;
         }
 
-        .cv-item__body p {
+        .ids .cv-item__body p {
             max-width: 60ch;
         }
 
@@ -43,7 +45,7 @@
            три ссылки не влезают в колонку). Выравнивание по базовой линии;
            обрезку «воздуха» у первой ссылки, нужную только в столбике, отключаем —
            иначе почта встаёт на 4px выше соседей. */
-        .cv-contacts {
+        .ids .cv-contacts {
             margin-top: 0.75em;
             flex-direction: row;
             flex-wrap: wrap;
@@ -56,29 +58,29 @@
             letter-spacing: normal;
         }
 
-        .cv-contacts .contacts__link:first-child {
+        .ids .cv-contacts .contacts__link:first-child {
             text-box: normal;
         }
 
         /* На мобиле позиции идут одной колонкой, и шапка сливается с текстом
            предыдущей — зазор между позициями берём как L вместо M */
         @media (width < 768px) {
-            .cv-item + .ids__space.M {
+            .ids .cv-item + .ids__space.M {
                 height: calc(var(--ids__density) * 2.4em);
             }
         }
 
         /* Печать / сохранение в PDF */
         @media print {
-            .ids__hero-portrait-wrapper {
+            .ids .ids__hero-header .ids__hero-portrait-wrapper {
                 width: 20%;
             }
 
-            .cv-item {
+            .ids .cv-item {
                 break-inside: avoid;
             }
 
-            .ids a {
+            .ids .ids__wrapper a {
                 text-decoration: none;
             }
         }
