@@ -35,6 +35,10 @@
       { "value": "55M+", "label": "installs" }
     ]
   },
+  "alchemy": {
+    "title": "Alchemy<br>Generative 3d",
+    "description": "3d studies built on the lessons of Alchemy Generative, a design-focused 3d course by Misha Katz at <a href=\"https://www.skool.com/method-4379/about?ref=b7b8c465a1c2421aaa7b435f2e9b1074\" target=\"_blank\" rel=\"noopener\">Method</a>. As the course’s assistant professor, I made examples for its exercises in Cinema 4D and Blender."
+  },
   "wolfram": {
     "title": "designworkout<br>wolfram74 zine",
     "titleUrl": "https://kiosk.works/tproduct/265969274982-wolfram74",

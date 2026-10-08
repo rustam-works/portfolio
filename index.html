@@ -55,6 +55,7 @@
     <link rel="stylesheet" href="css/settings.css">
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/ids.css">
+    <link rel="stylesheet" href="css/alchemy.css">
 </head>
 
 <body class="ids">
@@ -262,6 +263,93 @@
 
             <div class="ids__space XL"></div>
 
+            <!-- Alchemy Case Study — сетка раскладывается заново при каждой загрузке (js/alchemy-grid.js) -->
+            <div class="case-study" id="alchemy">
+                <div class="alchemy-stage">
+                <div class="alchemy-grid">
+                        <figure class="alchemy-item" data-key="belt" style="--c: 1 / span 8; --r: 1 / span 8; --mc: span 4; --mr: span 4">
+                            <video autoplay loop muted playsinline src="images/alchemy/glass_belt.mp4"></video>
+                        </figure>
+                        <!-- Dash queen: покадровое перелистывание, 8 кадров на подложке -->
+                        <figure class="alchemy-item alchemy-flip alchemy-flip--8" data-key="dash" style="--c: 10 / span 6; --r: 2 / span 8; --mc: span 2; --mr: span 3; --frames: 8; --flip-bg: #d6d5d2">
+                            <img loading="lazy" src="images/alchemy/dash_queen_01.webp" alt="Head sculpture drawn with coloured dashes, frame 1" width="1324" height="1600" style="--i: 0">
+                            <img loading="lazy" src="images/alchemy/dash_queen_02.webp" alt="Head sculpture drawn with coloured dashes, frame 2" width="1324" height="1600" style="--i: 1">
+                            <img loading="lazy" src="images/alchemy/dash_queen_03.webp" alt="Head sculpture drawn with coloured dashes, frame 3" width="1324" height="1600" style="--i: 2">
+                            <img loading="lazy" src="images/alchemy/dash_queen_04.webp" alt="Head sculpture drawn with coloured dashes, frame 4" width="1324" height="1600" style="--i: 3">
+                            <img loading="lazy" src="images/alchemy/dash_queen_05.webp" alt="Head sculpture drawn with coloured dashes, frame 5" width="1324" height="1600" style="--i: 4">
+                            <img loading="lazy" src="images/alchemy/dash_queen_06.webp" alt="Head sculpture drawn with coloured dashes, frame 6" width="1324" height="1600" style="--i: 5">
+                            <img loading="lazy" src="images/alchemy/dash_queen_07.webp" alt="Head sculpture drawn with coloured dashes, frame 7" width="1324" height="1600" style="--i: 6">
+                            <img loading="lazy" src="images/alchemy/dash_queen_08.webp" alt="Head sculpture drawn with coloured dashes, frame 8" width="1324" height="1600" style="--i: 7">
+                        </figure>
+                        <figure class="alchemy-item" data-key="turtle" style="--c: 17 / span 4; --r: 1 / span 4; --mc: span 2; --mr: span 2">
+                            <img loading="lazy" src="images/alchemy/turtle_queen.webp" alt="Turtle queen figure" width="1080" height="1080">
+                        </figure>
+
+                        <figure class="alchemy-item" data-key="barcode" style="--c: 21 / span 4; --r: 1 / span 4; --mc: span 2; --mr: span 2">
+                            <video autoplay loop muted playsinline preload="metadata" src="images/alchemy/barcode.mp4"></video>
+                        </figure>
+                        <figure class="alchemy-item" data-key="halftone" style="--c: 21 / span 4; --r: 5 / span 4; --mc: span 2; --mr: span 2">
+                            <video autoplay loop muted playsinline preload="metadata" src="images/alchemy/halftone.mp4"></video>
+                        </figure>
+                        <figure class="alchemy-item" data-key="ellipse" style="--c: 17 / span 4; --r: 6 / span 4; --mc: span 2; --mr: span 2">
+                            <video autoplay loop muted playsinline preload="metadata" src="images/alchemy/ellipse.mp4"></video>
+                        </figure>
+                        <figure class="alchemy-item" data-key="tangent" style="--c: 20 / span 4; --r: 9 / span 4; --mc: span 2; --mr: span 2; --z: 2">
+                            <video autoplay loop muted playsinline preload="metadata" src="images/alchemy/tangent_belt.mp4"></video>
+                        </figure>
+
+                        <!-- Сплайны: покадровое перелистывание, кадры разной пропорции вписаны в 0.9:1 -->
+                        <figure class="alchemy-item alchemy-flip" data-key="splines" style="--c: 1 / span 5; --r: 10 / span 6; --mc: span 2; --mr: span 2; --flip-bg: #c5c4c4; --step: 0.6s">
+                            <img loading="lazy" src="images/alchemy/fillet_01.webp" alt="Filleted random spline, frame 1" width="1002" height="1080" style="--i: 0">
+                            <img loading="lazy" src="images/alchemy/fillet_02.webp" alt="Filleted random spline, frame 2" width="1164" height="1126" style="--i: 1">
+                            <img loading="lazy" src="images/alchemy/fillet_03.webp" alt="Filleted random spline, frame 3" width="844" height="1176" style="--i: 2">
+                            <img loading="lazy" src="images/alchemy/fillet_04.webp" alt="Filleted random spline, frame 4" width="1162" height="1156" style="--i: 3">
+                            <img loading="lazy" src="images/alchemy/fillet_05.webp" alt="Filleted random spline, frame 5" width="1036" height="1162" style="--i: 4">
+                            <img loading="lazy" src="images/alchemy/fillet_06.webp" alt="Filleted random spline, frame 6" width="962" height="1238" style="--i: 5">
+                        </figure>
+                        <!-- Леттеринги: два ряда вплотную (4 + 3), холсты слов одной высоты, пропорция блока ~2.6:1 -->
+                        <figure class="alchemy-item alchemy-set alchemy-set--lettering" data-key="lettering" style="--c: 9 / span 16; --r: 24 / span 4; --mc: span 6; --mr: span 2">
+                            <div class="alchemy-set__row">
+                                <img loading="lazy" src="images/alchemy/lettering_01.webp" alt="Procedural lettering" width="1028" height="800">
+                                <img loading="lazy" src="images/alchemy/lettering_02.webp" alt="Procedural lettering" width="1090" height="800">
+                                <img loading="lazy" src="images/alchemy/lettering_04.webp" alt="Procedural lettering" width="1138" height="800">
+                                <img loading="lazy" src="images/alchemy/lettering_07.webp" alt="Procedural lettering" width="950" height="800">
+                            </div>
+                            <div class="alchemy-set__row">
+                                <img loading="lazy" src="images/alchemy/lettering_03.webp" alt="Procedural lettering" width="1232" height="800">
+                                <img loading="lazy" src="images/alchemy/lettering_05.webp" alt="Procedural lettering" width="1310" height="800">
+                                <img loading="lazy" src="images/alchemy/lettering_06.webp" alt="Procedural lettering" width="1156" height="800">
+                            </div>
+                        </figure>
+                        <figure class="alchemy-item" data-key="foam" style="--c: 14 / span 4; --r: 15 / span 7; --mc: span 2; --mr: span 4; --z: 2">
+                            <img loading="lazy" src="images/alchemy/foam.webp" alt="Foam lettering" width="900" height="1600">
+                        </figure>
+
+                        <figure class="alchemy-item" data-key="radial" style="--c: 19 / span 4; --r: 12 / span 4; --mc: span 2; --mr: span 2; --z: 3">
+                            <video autoplay loop muted playsinline preload="metadata" src="images/alchemy/radial.mp4"></video>
+                        </figure>
+
+                        <figure class="alchemy-item" data-key="userdata" style="--c: 18 / span 7; --r: 19 / span 5; --mc: span 4; --mr: span 3">
+                            <video autoplay loop muted playsinline preload="metadata" src="images/alchemy/userdata.mp4"></video>
+                        </figure>
+                        <!-- Камера обратной перспективы: небольшой блок поверх раскладки, в пустом месте -->
+                        <figure class="alchemy-item" data-key="reverse" style="--c: 22 / span 3; --r: 1 / span 3; --mc: span 2; --mr: span 2; --z: 3">
+                            <video autoplay loop muted playsinline preload="metadata" src="images/alchemy/reverse_persp.mp4"></video>
+                        </figure>
+                </div>
+
+                </div>
+
+                <div class="ids__space S"></div>
+
+                <div class="case-study__grid" data-project="alchemy">
+                    <h2 class="case-study__title"></h2>
+                    <p class="case-study__description"></p>
+                </div>
+            </div>
+
+            <div class="ids__space XL"></div>
+
             <!-- Wolfram Case Study -->
             <div class="wolfram-case" id="wolfram">
                 <div class="wolfram-spreads">
@@ -325,6 +413,7 @@
 
     </main>
     <script type="module" src="js/content.js"></script>
+    <script type="module" src="js/alchemy-grid.js"></script>
 </body>
 
 </html>

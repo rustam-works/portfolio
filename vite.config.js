@@ -12,7 +12,8 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, 'index.html'),           // Главная (портфолио)
         pxltool: resolve(__dirname, 'pxltool/index.html'), // Инструмент
-        cv: resolve(__dirname, 'cv/index.html')
+        cv: resolve(__dirname, 'cv/index.html'),
+        alchemy: resolve(__dirname, 'alchemy/index.html')
       }
     }
   }
