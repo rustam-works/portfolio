@@ -1,0 +1,131 @@
+/* Вариант оформления «Akt» — подключается поверх основных стилей на akt.html.
+   Основной сайт (index.html) этот файл не использует. */
+
+@font-face {
+  font-family: 'Akt';
+  src: url('./fonts/Akt-VF.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Скруглений нет нигде, кроме кнопки CTA и большинства работ Alchemy
+   (там остаются как в оригинале; без скругления покадровые блоки, turtle и foam) */
+.ids__rounded,
+.dodo-deck-visuals,
+.dodo-deck-img,
+.dodo-deck-tool,
+.ids .alchemy-flip,
+.ids .alchemy-item[data-key="turtle"],
+.ids .alchemy-item[data-key="foam"] {
+  border-radius: 0;
+}
+
+/* Alchemy: плотная сетка */
+.ids .alchemy-grid {
+  --gap: 0.1em;
+}
+
+/* Шрифт везде */
+body,
+.ids code {
+  font-family: 'Akt', sans-serif;
+}
+
+/* Все заголовки — Bold, интерлиньяж как в hero; цифры-фактоиды того же веса */
+.ids :is(h1, h2, h3, h4, h5, h6):is(*, .S, .XS, .case-study__title),
+.ids .ids__hero-header h1,
+.ids .ids__hero-header h1 strong,
+.case-study__stat-value {
+  font-weight: 700;
+}
+
+.ids :is(h1, h2, h3, h4, h5, h6):is(*, .S, .XS, .case-study__title) {
+  line-height: 0.966;
+}
+
+/* Картинки кейса → текст под ними: 0.5em */
+.ids__space.S:has(+ .case-study__grid) {
+  height: 0.5em;
+}
+
+.goethe-case,
+.dodo-case,
+.yandex-case {
+  gap: 0.5em;
+}
+
+/* Hero: фото слева вплотную к тексту, крупный заголовок, подпись по низу фото */
+.ids .ids__hero-header {
+  gap: 0.5em;
+  container-type: inline-size;
+}
+
+.ids .ids__hero-portrait-wrapper {
+  width: 21%;
+  aspect-ratio: 0.737;
+}
+
+.ids .ids__hero-portrait {
+  transform: translateX(-3%) scale(1.31);
+  transform-origin: center 25%;
+}
+
+.ids .ids__hero-header .ids__text-width {
+  max-width: 46.2cqw;
+}
+
+.ids .ids__hero-header .ids__text-constrained {
+  max-width: none;
+}
+
+.ids .ids__hero-header h1 {
+  font-size: 4.05cqw;
+  letter-spacing: -0.035em;
+  line-height: 0.966;
+}
+
+.ids .ids__hero-header .ids__text-meta {
+  margin-bottom: 0;
+  font-size: 1.15em;
+  line-height: 1;
+}
+
+@media (width < 768px) {
+  .ids .ids__hero-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .ids .ids__hero-portrait-wrapper {
+    width: 100%;
+    aspect-ratio: 1.1 / 1;
+  }
+
+  .ids .ids__hero-header .ids__text-width {
+    max-width: none;
+  }
+
+  .ids .ids__hero-portrait {
+    transform: none;
+  }
+
+  .ids .ids__hero-header h1 {
+    font-size: 2.6em;
+  }
+}
+
+/* «3» в «3d» опущена ещё на 3% кегля (в основных стилях 0.18em) */
+.ids .ids__oldstyle-figure {
+  top: 0.21em;
+}
+
+/* Описания кейсов: строка короче (в основных стилях 60ch) */
+.case-study__description {
+  max-width: 54ch;
+}
+
+/* Отступ между hero и первым кейсом вдвое больше (в основных стилях 2.4 × density) */
+.ids__hero-header + .ids__space.L {
+  height: calc(var(--ids__density) * 4.8em);
+}
