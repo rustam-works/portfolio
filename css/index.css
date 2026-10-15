@@ -1,0 +1,9 @@
+/* Стили главной одним файлом: порядок импортов = порядок каскада.
+   akt.css идёт последним и переопределяет основные стили. */
+@import './colors.css';
+@import './reset.css';
+@import './settings.css';
+@import './layout.css';
+@import './ids.css';
+@import './alchemy.css';
+@import './akt.css';
