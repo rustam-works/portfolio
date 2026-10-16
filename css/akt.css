@@ -129,3 +129,16 @@ body,
 .ids__hero-header + .ids__space.L {
   height: calc(var(--ids__density) * 4.8em);
 }
+
+/* Выравнивание по cap height, как «vertical trim» в Фигме: верх заглавных
+   заголовка ровно по верху фото, базовая линия подписи — по низу фото.
+   Firefox пока не умеет text-box — там остаётся обычная кегельная площадка. */
+@supports (text-box: trim-start cap alphabetic) {
+  .ids .ids__hero-header h1 {
+    text-box: trim-start cap alphabetic;
+  }
+
+  .ids .ids__hero-header .ids__text-meta {
+    text-box: trim-end cap alphabetic;
+  }
+}
