@@ -13,7 +13,8 @@ export default defineConfig({
         main: resolve(__dirname, 'index.html'),           // Главная (портфолио)
         pxltool: resolve(__dirname, 'pxltool/index.html'), // Инструмент
         cv: resolve(__dirname, 'cv/index.html'),
-        alchemy: resolve(__dirname, 'alchemy/index.html')
+        alchemy: resolve(__dirname, 'alchemy/index.html'),
+        privacy: resolve(__dirname, 'pinterest-mcp-privacy/index.html')
       }
     }
   }
