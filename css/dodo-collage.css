@@ -1,0 +1,136 @@
+/* Кейс Dodo Pizza: коллаж мерча и графики слева + слайды деки справа (Google Slides).
+   Раскладка снята с макета по пикселям: рамка блока = направляющие макета
+   (1837 × 721.5 px), коллаж — левые 1202.5 px, панель деки — правые 634.5 px.
+   Внутри обеих частей всё стоит абсолютно, в процентах от своей рамки,
+   поэтому пропорции держатся на любой ширине. Часть предметов намеренно
+   выходит за рамку — оптическая компенсация, как на макете.
+   На телефоне коллаж и панель встают друг под друга. */
+
+.dodo-deck-visuals {
+  display: flex;
+  align-items: stretch;
+  /* Сбрасываем оформление старой версии блока из layout.css */
+  padding: 0;
+  background: none;
+  border-radius: 0;
+  container-type: inline-size;
+}
+
+.dodo-collage,
+.dodo-deck-panel {
+  position: relative;
+}
+
+.dodo-collage {
+  flex: 0 0 65.46%;
+  aspect-ratio: 1202.5 / 721.5;
+  /* Предметы коллажа лежат поверх панели (брелок заходит на неё) */
+  z-index: 1;
+}
+
+.dodo-collage__item {
+  position: absolute;
+  height: auto;
+  z-index: var(--z, 1);
+  rotate: var(--r, 0deg);
+}
+
+.dodo-collage__round {
+  --card-radius: 0.6cqw;
+  border-radius: var(--card-radius);
+}
+
+/* Стопки (турецкие ТВ-доски, баннеры VK): верхние карточки бросают тень только
+   на нижние, не на фон. Нижняя карточка — контейнер с overflow: hidden, внутри
+   невидимые «отбрасыватели» на месте верхних карточек (координаты в системе
+   нижней карточки, с учётом её поворота); их тень обрезается краем карточки. */
+.dodo-collage__stacked {
+  overflow: hidden;
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.dodo-collage__shade {
+  position: absolute;
+  border-radius: var(--card-radius);
+  rotate: var(--sr, 0deg);
+  box-shadow: 0 0.2cqw 1cqw rgba(0, 0, 0, 0.3);
+}
+
+/* Листы (баллоны, съёмки): лёгкая тень и одинаковый тонкий полупрозрачный
+   строук внутрь (outline с отрицательным отступом рисуется поверх картинки) */
+.dodo-collage__item--sheet {
+  box-shadow: 0 0.15cqw 0.6cqw rgba(0, 0, 0, 0.08);
+  outline: 1px solid rgba(0, 0, 0, 0.12);
+  outline-offset: -1px;
+  border-radius: 0.2cqw;
+}
+
+.dodo-collage__item--shoots {
+  border-radius: 0.5cqw;
+}
+
+/* Правая часть — оранжевый градиент со слайдами.
+   Цвета сняты с макета: сверху #F1F2F8, снизу #FE5004 */
+.dodo-deck-panel {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  background: linear-gradient(0deg, rgb(254, 80, 4) 15%, rgb(241, 242, 248) 95%);
+}
+
+.dodo-deck-panel > img {
+  position: absolute;
+  height: auto;
+  max-width: none;
+  display: block;
+}
+
+.dodo-deck-panel .dodo-deck-img {
+  border-radius: 0.3cqw;
+}
+
+/* Тулбар Google Slides: пилюля до правого края слайдов, остальное обрезано */
+.dodo-deck-panel__toolbar {
+  position: absolute;
+  aspect-ratio: 596.2 / 39.7;
+  overflow: hidden;
+  border-radius: 999px;
+
+  img {
+    display: block;
+    width: 258.4%;
+    max-width: none;
+    height: auto;
+  }
+}
+
+@media (width < 768px) {
+  .dodo-deck-visuals {
+    flex-direction: column;
+  }
+
+  .dodo-collage {
+    flex: none;
+    width: 100%;
+    margin-bottom: 4cqw;
+  }
+
+  .dodo-deck-panel {
+    flex: none;
+    width: 100%;
+    aspect-ratio: 634.5 / 721.5;
+  }
+
+  .dodo-deck-panel .dodo-deck-img {
+    border-radius: 1cqw;
+  }
+
+  .dodo-collage__round {
+    --card-radius: 1.6cqw;
+  }
+}
