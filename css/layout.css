@@ -171,7 +171,7 @@ footer {
 /* Style moved to ids.css as .ids__media-full */
 
 /* Anchor scroll offset */
-#dodo-deck, #ipak, #goethe-dodo, #yandex-go, #goethe, #edadeal, #wolfram, #kvass {
+#dodo, #ipak, #goethe-dodo, #yandex-go, #goethe, #edadeal, #wolfram, #kvass {
   scroll-margin-top: 2em;
 }
 
