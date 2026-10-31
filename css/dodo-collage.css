@@ -8,6 +8,7 @@
    На телефоне коллаж и панель встают друг под друга. */
 
 .dodo-deck-visuals {
+  position: relative;
   display: flex;
   align-items: stretch;
   /* Сбрасываем оформление старой версии блока из layout.css */
@@ -31,9 +32,34 @@
 
 .dodo-collage__item {
   position: absolute;
+  /* Положение: --x/--y/--w на десктопе, --mx/--my/--mw — своя раскладка на телефоне */
+  left: var(--x);
+  top: var(--y);
+  width: var(--w);
   height: auto;
   z-index: var(--z, 1);
   rotate: var(--r, 0deg);
+  /* Течение двигает предметы через transform (js/dodo-motion.js) */
+  will-change: transform;
+}
+
+/* Коллаж — не ссылки: курсор обычный, вертикальная прокрутка пальцем не мешает */
+.dodo-collage {
+  cursor: default;
+  touch-action: pan-y;
+}
+
+/* Карточки «Something went wrong»: стопка из трёх, скругление как у оригинала */
+.dodo-collage__smth {
+  aspect-ratio: 16 / 9;
+  border-radius: 4.17% / 7.41%;
+  overflow: hidden;
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
 }
 
 .dodo-collage__round {
@@ -53,6 +79,13 @@
     width: 100%;
     height: 100%;
   }
+}
+
+/* Рамка теней получает обратную трансформацию нижней карточки — тени
+   остаются под верхними карточками, когда нижняя двигается */
+.dodo-collage__shade-frame {
+  position: absolute;
+  inset: 0;
 }
 
 .dodo-collage__shade {
@@ -87,6 +120,9 @@
 .dodo-deck-panel > img,
 .dodo-deck-panel__layer {
   position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--w);
   height: auto;
   max-width: none;
   display: block;
@@ -117,6 +153,9 @@
 /* Тулбар Google Slides: пилюля до правого края слайдов, остальное обрезано */
 .dodo-deck-panel__toolbar {
   position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--w);
   aspect-ratio: 596.2 / 39.7;
   overflow: hidden;
   border-radius: 999px;
@@ -134,20 +173,47 @@
     flex-direction: column;
   }
 
+  /* На телефоне коллаж выше: своя раскладка с макета (рамка 568 × 715 px).
+     Панель деки встаёт вплотную, нижние предметы коллажа заходят на неё */
   .dodo-collage {
     flex: none;
     width: 100%;
-    margin-bottom: 4cqw;
+    aspect-ratio: 568 / 715;
   }
 
+  /* Панель деки на телефоне — широкая: стопка с главным слайдом слева,
+     справа столбиком два слайда Drinkit — обложка и карта (рамка 1198 × 634.5 px) */
   .dodo-deck-panel {
     flex: none;
     width: 100%;
-    aspect-ratio: 946.5 / 1235;
+    aspect-ratio: 1198 / 634.5;
   }
 
-  .dodo-deck-panel .dodo-deck-img {
-    border-radius: 1cqw;
+  .dodo-deck-panel > .dodo-deck-panel__extra {
+    display: none;
+  }
+
+  .dodo-deck-panel .dodo-deck-img,
+  .dodo-deck-panel__layer {
+    border-radius: 0.6cqw;
+  }
+
+  /* Тулбар длиннее — видно больше кнопок */
+  .dodo-deck-panel__toolbar {
+    aspect-ratio: 1100.5 / 60.8;
+
+    img {
+      width: 214.4%;
+    }
+  }
+
+  .dodo-collage__item,
+  .dodo-deck-panel > img,
+  .dodo-deck-panel__layer,
+  .dodo-deck-panel__toolbar {
+    left: var(--mx);
+    top: var(--my);
+    width: var(--mw);
   }
 
   .dodo-collage__round {
