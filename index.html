@@ -79,15 +79,16 @@
 
                         <div class="aurora-case__videos">
                             <video autoplay loop muted playsinline class="aurora-case__video ids__rounded" data-speed="4.5">
-                                <source src="images/aurora/petals.webm" type="video/webm">
-                                <source src="images/aurora/petals.mp4" type="video/mp4">
+                                <source src="images/aurora/petals.webm" type='video/webm; codecs="av01.0.04M.08"'>
+                                <source src="images/aurora/petals.mp4" type='video/mp4; codecs="hvc1.1.6.L90.90"'>
                             </video>
                             <video autoplay loop muted playsinline class="aurora-case__video ids__rounded" data-speed="3.6">
-                                <source src="images/aurora/chisel.webm" type="video/webm">
-                                <source src="images/aurora/chisel.mp4" type="video/mp4">
+                                <source src="images/aurora/chisel.webm" type='video/webm; codecs="av01.0.04M.08"'>
+                                <source src="images/aurora/chisel.mp4" type='video/mp4; codecs="hvc1.1.6.L90.90"'>
                             </video>
                             <video autoplay loop muted playsinline class="aurora-case__video ids__rounded" data-speed="1">
-                                <source src="images/aurora/clip3.mp4" type="video/mp4">
+                                <source src="images/aurora/clip3.webm" type='video/webm; codecs="av01.0.04M.08"'>
+                                <source src="images/aurora/clip3.mp4" type='video/mp4; codecs="avc1.64001F"'>
                             </video>
                         </div>
                     </div>
@@ -188,16 +189,16 @@
                     <div class="ipak-v2-middle">
                         <div class="ipak-v2-grid-top">
                             <img loading="lazy" src="images/ipak v2/grid_1.webp" alt="Ipak Yuli — 3d social media post" width="1080" height="1350">
-                            <video autoplay loop muted playsinline>
-                                <source src="images/ipak v2/grid_2.webm" type="video/webm">
-                                <source src="images/ipak v2/grid_2.mp4" type="video/mp4">
+                            <video preload="none" loop muted playsinline>
+                                <source src="images/ipak v2/grid_2.webm" type='video/webm; codecs="av01.0.04M.08"'>
+                                <source src="images/ipak v2/grid_2.mp4" type='video/mp4; codecs="hvc1.1.6.L93.90"'>
                             </video>
                             <img loading="lazy" src="images/ipak v2/grid_3.webp" alt="Ipak Yuli — 3d social media post" width="1080" height="1350">
                             <img loading="lazy" src="images/ipak v2/grid_4.webp" alt="Ipak Yuli — 3d social media post" width="1080" height="1350">
                         </div>
-                        <video class="ipak-v2-grid-bottom" autoplay loop muted playsinline>
-                            <source src="images/ipak v2/grid_bottom.webm" type="video/webm">
-                            <source src="images/ipak v2/grid_bottom.mp4" type="video/mp4">
+                        <video preload="none" class="ipak-v2-grid-bottom" loop muted playsinline>
+                            <source src="images/ipak v2/grid_bottom.webm" type='video/webm; codecs="av01.0.08M.08"'>
+                            <source src="images/ipak v2/grid_bottom.mp4" type='video/mp4; codecs="hvc1.1.6.L120.90"'>
                         </video>
                     </div>
 
@@ -231,9 +232,9 @@
                 <div class="goethe-case ids__sequence-item" id="goethe" data-project="goethe">
                     <div class="goethe-case__container">
                         <img src="images/goethe/bezel.png" alt="" class="goethe-case__bezel" width="2064" height="1424">
-                        <video autoplay loop muted playsinline class="goethe-case__video">
-                            <source src="images/goethe/simurgh.webm" type="video/webm">
-                            <source src="images/goethe/simurgh.mp4" type="video/mp4">
+                        <video preload="none" loop muted playsinline class="goethe-case__video">
+                            <source src="images/goethe/simurgh.webm" type='video/webm; codecs="av01.0.04M.08"'>
+                            <source src="images/goethe/simurgh.mp4" type='video/mp4; codecs="hvc1.1.6.L93.90"'>
                         </video>
                     </div>
 
@@ -281,7 +282,10 @@
                 <div class="alchemy-stage">
                 <div class="alchemy-grid">
                         <figure class="alchemy-item" data-key="belt" style="--c: 1 / span 8; --r: 1 / span 8; --mc: span 4; --mr: span 4">
-                            <video autoplay loop muted playsinline src="images/alchemy/glass_belt.mp4"></video>
+                            <video preload="none" loop muted playsinline>
+                                <source src="images/alchemy/glass_belt.webm" type='video/webm; codecs="av01.0.08M.08"'>
+                                <source src="images/alchemy/glass_belt.mp4" type='video/mp4; codecs="hvc1.1.6.L120.90"'>
+                            </video>
                         </figure>
                         <!-- Dash queen: покадровое перелистывание, 8 кадров на подложке -->
                         <figure class="alchemy-item alchemy-flip alchemy-flip--8" data-key="dash" style="--c: 10 / span 6; --r: 2 / span 8; --mc: span 2; --mr: span 3; --frames: 8; --flip-bg: #d6d5d2">
@@ -299,16 +303,28 @@
                         </figure>
 
                         <figure class="alchemy-item" data-key="barcode" style="--c: 21 / span 4; --r: 1 / span 4; --mc: span 2; --mr: span 2">
-                            <video autoplay loop muted playsinline preload="metadata" src="images/alchemy/barcode.mp4"></video>
+                            <video preload="none" loop muted playsinline>
+                                <source src="images/alchemy/barcode.webm" type='video/webm; codecs="av01.0.08M.08"'>
+                                <source src="images/alchemy/barcode.mp4" type='video/mp4; codecs="hvc1.1.6.L120.90"'>
+                            </video>
                         </figure>
                         <figure class="alchemy-item" data-key="halftone" style="--c: 21 / span 4; --r: 5 / span 4; --mc: span 2; --mr: span 2">
-                            <video autoplay loop muted playsinline preload="metadata" src="images/alchemy/halftone.mp4"></video>
+                            <video preload="none" loop muted playsinline>
+                                <source src="images/alchemy/halftone.webm" type='video/webm; codecs="av01.0.08M.08"'>
+                                <source src="images/alchemy/halftone.mp4" type='video/mp4; codecs="hvc1.1.6.L120.90"'>
+                            </video>
                         </figure>
                         <figure class="alchemy-item" data-key="ellipse" style="--c: 17 / span 4; --r: 6 / span 4; --mc: span 2; --mr: span 2">
-                            <video autoplay loop muted playsinline preload="metadata" src="images/alchemy/ellipse.mp4"></video>
+                            <video preload="none" loop muted playsinline>
+                                <source src="images/alchemy/ellipse.webm" type='video/webm; codecs="av01.0.08M.08"'>
+                                <source src="images/alchemy/ellipse.mp4" type='video/mp4; codecs="avc1.640028"'>
+                            </video>
                         </figure>
                         <figure class="alchemy-item" data-key="tangent" style="--c: 20 / span 4; --r: 9 / span 4; --mc: span 2; --mr: span 2; --z: 2">
-                            <video autoplay loop muted playsinline preload="metadata" src="images/alchemy/tangent_belt.mp4"></video>
+                            <video preload="none" loop muted playsinline>
+                                <source src="images/alchemy/tangent_belt.webm" type='video/webm; codecs="av01.0.08M.08"'>
+                                <source src="images/alchemy/tangent_belt.mp4" type='video/mp4; codecs="hvc1.1.6.L120.90"'>
+                            </video>
                         </figure>
 
                         <!-- Сплайны: покадровое перелистывание, кадры разной пропорции вписаны в 0.9:1 -->
@@ -339,15 +355,24 @@
                         </figure>
 
                         <figure class="alchemy-item" data-key="radial" style="--c: 19 / span 4; --r: 12 / span 4; --mc: span 2; --mr: span 2; --z: 3">
-                            <video autoplay loop muted playsinline preload="metadata" src="images/alchemy/radial.mp4"></video>
+                            <video preload="none" loop muted playsinline>
+                                <source src="images/alchemy/radial.webm" type='video/webm; codecs="av01.0.08M.08"'>
+                                <source src="images/alchemy/radial.mp4" type='video/mp4; codecs="hvc1.1.6.L120.90"'>
+                            </video>
                         </figure>
 
                         <figure class="alchemy-item" data-key="userdata" style="--c: 18 / span 7; --r: 19 / span 5; --mc: span 4; --mr: span 3">
-                            <video autoplay loop muted playsinline preload="metadata" src="images/alchemy/userdata.mp4"></video>
+                            <video preload="none" loop muted playsinline>
+                                <source src="images/alchemy/userdata.webm" type='video/webm; codecs="av01.0.05M.08"'>
+                                <source src="images/alchemy/userdata.mp4" type='video/mp4; codecs="hvc1.1.6.L93.90"'>
+                            </video>
                         </figure>
                         <!-- Камера обратной перспективы: небольшой блок поверх раскладки, в пустом месте -->
                         <figure class="alchemy-item" data-key="reverse" style="--c: 22 / span 3; --r: 1 / span 3; --mc: span 2; --mr: span 2; --z: 3">
-                            <video autoplay loop muted playsinline preload="metadata" src="images/alchemy/reverse_persp.mp4"></video>
+                            <video preload="none" loop muted playsinline>
+                                <source src="images/alchemy/reverse_persp.webm" type='video/webm; codecs="av01.0.08M.08"'>
+                                <source src="images/alchemy/reverse_persp.mp4" type='video/mp4; codecs="hvc1.1.6.L120.90"'>
+                            </video>
                         </figure>
                 </div>
 
@@ -428,6 +453,7 @@
     <script type="module" src="js/content.js"></script>
     <script type="module" src="js/alchemy-grid.js"></script>
     <script type="module" src="js/dodo-motion.js"></script>
+    <script type="module" src="js/lazy-video.js"></script>
 </body>
 
 </html>

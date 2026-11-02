@@ -228,8 +228,9 @@ function apply() {
     // Порядок в DOM — тот же, что у раскладки: на телефоне сетка укладывается
     // автоматически по порядку, так и там каждый раз выходит новая последовательность
     for (const { key } of placed) grid.appendChild(byKey.get(key));
-    // Перенос в DOM ставит видео на паузу — запускаем обратно
-    grid.querySelectorAll('video').forEach((video) => video.play().catch(() => {}));
+    // Перенос в DOM ставит видео на паузу — запускаем обратно те, что на экране
+    // (остальные запустит js/lazy-video.js, когда до них долистают)
+    grid.querySelectorAll('video[data-visible]').forEach((video) => video.play().catch(() => {}));
 }
 
 // Случайный порядок кадров: номер кадра в цикле задаёт --i (см. .alchemy-flip в CSS)
