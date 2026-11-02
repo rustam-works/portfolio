@@ -1,9 +1,10 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { resolve } from 'path'
+import projectTexts from './vite-plugin-projects.js'
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), projectTexts()],
   root: '.', // Корень проекта здесь
   base: './', // Относительные пути для GitHub Pages
   build: {
