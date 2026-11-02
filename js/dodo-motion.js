@@ -11,11 +11,8 @@ const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 // Не двигаются: листы (баллоны, съёмки) и передние карточки стопок
 const STATIC = ['cylinders', 'shoots', 'vk_1', 'tv_revenue'];
 
-const nameOf = (el) => {
-  if (el.dataset.card) return 'smth_' + el.dataset.card;
-  const img = el.tagName === 'IMG' ? el : el.querySelector('img');
-  return img ? img.getAttribute('src').split('/').pop().replace(/\.\w+$/, '') : null;
-};
+// Имя предмета — из data-name: имена файлов в сборке получают метку (keychain-DU3Caqzw.webp)
+const nameOf = (el) => el.dataset.name || null;
 
 // Отдельным предметам — своя сила течения (1 — как у всех)
 const GAIN = { football_cards: 0.3, keychain: 0.5 };
@@ -49,6 +46,7 @@ function measure() {
   for (const it of items) {
     const e = it.el;
     const p = e.offsetParent;
+    if (!p) continue; // предмет скрыт или убран со страницы
     it.box = { l: e.offsetLeft + p.offsetLeft, t: e.offsetTop + p.offsetTop, w: e.offsetWidth, h: e.offsetHeight };
   }
 }
@@ -152,6 +150,7 @@ if (shoots && !reduce) {
     const svg = new DOMParser().parseFromString(text, 'image/svg+xml').documentElement;
     if (!svg.querySelector('.cam__flash')) return;
     svg.setAttribute('class', shoots.className);
+    svg.dataset.name = shoots.dataset.name;
     svg.setAttribute('style', shoots.getAttribute('style') + ';height:auto;aspect-ratio:276/194');
     svg.setAttribute('role', 'img');
     svg.setAttribute('aria-label', shoots.alt);
