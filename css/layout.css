@@ -473,6 +473,8 @@ footer {
   transform: translate(-50%, -50%);
   width: 93%;
   height: auto;
+  /* Пропорции экрана заданы явно, чтобы видео не схлопывалось до загрузки */
+  aspect-ratio: 3 / 2;
   /* радиус как доля ширины контейнера (≈ прежние 12px на десктопе),
      но пропорционально уменьшается вместе с безелем на узких экранах */
   border-radius: 2.5cqw;
@@ -853,16 +855,19 @@ footer {
     flex-direction: column;
   }
 
+  /* Персонаж почти во всю ширину, позади коллажа и заходит в него снизу */
   .edadeal-character {
-    width: 80%;
+    width: 98%;
     height: auto;
-    margin-bottom: 1em;
+    margin-bottom: -32.3%;
+    z-index: 1;
   }
 
   .edadeal-all {
     width: 100%;
     height: auto;
     margin-left: 0;
+    z-index: 2;
   }
 }
 
@@ -953,10 +958,18 @@ footer {
     align-content: center;
   }
 
+  /* Нижняя картинка ниже: обрезаем сверху и снизу */
+  .ipak-v2-r {
+    aspect-ratio: 1 / 1;
+  }
+
+  /* Видео справа подгоняется по высоте сетки 2 × 2 (лишнее обрезается) */
   .ipak-v2-grid-bottom {
-    flex: 0 0 65%;
+    position: absolute;
+    top: 0;
+    right: 0;
     width: 65%;
-    height: auto;
+    height: 100%;
     object-fit: cover;
   }
 }
