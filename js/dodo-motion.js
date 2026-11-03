@@ -25,7 +25,8 @@ const layerGain = (el) => 0.15 + (0.8 - parseFloat(el.style.getPropertyValue('--
 let seed = 7;
 const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
 
-const items = [...collage.children, ...document.querySelectorAll('.dodo-deck-panel__layer')]
+// Часть предметов обёрнута в <picture> (AVIF с запасным WebP) — берём саму картинку
+const items = [...collage.querySelectorAll(':scope > [data-name], :scope > picture > img'), ...document.querySelectorAll('.dodo-deck-panel__layer')]
   .filter((el) => el.tagName !== 'svg' && nameOf(el) && !STATIC.includes(nameOf(el)))
   .map((el) => ({
     el, name: nameOf(el), frame: el.querySelector(':scope > .dodo-collage__shade-frame'),

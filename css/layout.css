@@ -1,3 +1,14 @@
+/* <picture> только выбирает формат (AVIF или WebP) и не участвует в раскладке:
+   картинка внутри ведёт себя так, будто обёртки нет */
+picture {
+  display: contents;
+}
+
+/* Иначе пустой <source> становится элементом раскладки и во flex добавляет лишний gap */
+picture > source {
+  display: none;
+}
+
 .ids__space {
   height: calc(var(--ids__density) * 0.7em);
 
