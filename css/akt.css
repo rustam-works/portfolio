@@ -97,9 +97,15 @@ body,
     align-items: flex-start;
   }
 
-  /* Фото на треть ширины, кадр как на десктопе */
+  /* Фото на половину ширины, кадр как на десктопе, но ниже:
+     срезано поровну сверху и снизу */
   .ids .ids__hero-portrait-wrapper {
-    width: 33.3%;
+    width: 50%;
+    aspect-ratio: 0.9;
+  }
+
+  .ids .ids__hero-portrait {
+    object-position: center;
   }
 
   .ids .ids__hero-header .ids__text-width {

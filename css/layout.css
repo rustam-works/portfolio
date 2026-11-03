@@ -650,7 +650,12 @@ footer {
   .case-study__description {
     max-width: none;
     padding-top: 0;
-    font-size: 0.9em;
+  }
+
+  /* Текст кейсов на телефоне мельче (.ids p задаёт 0.9em и перебивает просто класс);
+     абзац в контактах не трогаем */
+  .ids :not(.contacts__text) > .case-study__description {
+    font-size: 0.8em;
   }
 
   .case-study__stats {
