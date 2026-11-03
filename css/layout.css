@@ -1016,7 +1016,10 @@ footer {
   display: block;
 }
 
+/* На телефоне картинки кваса идут сверху вниз, каждая во всю ширину */
 @media (width < 768px) {
-  /* Keep same layout on mobile as user didn't specify stack */
-  /* If needed, can stack bottom images here */
+  .kvass-top,
+  .kvass-bottom {
+    width: 100%;
+  }
 }
