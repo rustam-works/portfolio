@@ -61,8 +61,11 @@ const T = {
   turn: 0.035,    // разворот от прохода курсора сбоку от центра
   maxMove: 0.0025,// предел сноса
   maxTurn: 0.7,   // предел поворота, °
-  scroll: 0.005,  // отставание при прокрутке
+  scroll: 0.0065, // отставание при прокрутке
+  phone: 2,       // на телефоне течение от прокрутки сильнее: коллаж там узкий, и в долях
+                  // его ширины тот же снос — это доли пикселя
 };
+const phone = matchMedia('(width < 768px)');
 
 let last = null;
 stage.addEventListener('pointermove', (ev) => {
@@ -99,7 +102,7 @@ addEventListener('scroll', () => {
   if (reduce) return;
   const r = collage.getBoundingClientRect();
   if (r.bottom < 0 || r.top > innerHeight) return;
-  const k = Math.max(-40, Math.min(40, d)) * T.scroll;
+  const k = Math.max(-40, Math.min(40, d)) * T.scroll * (phone.matches ? T.phone : 1);
   for (const it of items) {
     it.vy -= k * it.lag * it.gain;
     it.w += k * it.spin * 0.04 * it.gain;
@@ -118,7 +121,7 @@ function wake() {
 function frame(now) {
   const dt = Math.min(3, (now - prev) / 16.67);
   prev = now;
-  const W = collage.clientWidth, lim = W * T.maxMove;
+  const W = collage.clientWidth, lim = W * T.maxMove * (phone.matches ? T.phone : 1);
   let energy = 0;
   for (const it of items) {
     const over = Math.abs(it.a) > T.maxTurn ? 6 : 1;

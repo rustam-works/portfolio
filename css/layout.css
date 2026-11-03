@@ -650,6 +650,7 @@ footer {
   .case-study__description {
     max-width: none;
     padding-top: 0;
+    font-size: 0.9em;
   }
 
   .case-study__stats {
