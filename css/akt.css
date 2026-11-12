@@ -55,14 +55,15 @@ body,
   gap: 0.5em;
 }
 
-/* Hero: фото слева вплотную к тексту, крупный заголовок, подпись по низу фото */
+/* Hero: фото слева вплотную к тексту, крупный заголовок, подпись по низу фото.
+   Все размеры в em, как кегли в IDS: пропорции заголовка, фото и текста
+   одинаковые на любой ширине (сняты с вида при ширине окна 1440) */
 .ids .ids__hero-header {
   gap: 0.5em;
-  container-type: inline-size;
 }
 
 .ids .ids__hero-portrait-wrapper {
-  width: 21%;
+  width: 11.3em;
   aspect-ratio: 0.737;
 }
 
@@ -72,7 +73,7 @@ body,
 }
 
 .ids .ids__hero-header .ids__text-width {
-  max-width: 46.2cqw;
+  max-width: 24.9em;
 }
 
 .ids .ids__hero-header .ids__text-constrained {
@@ -80,7 +81,7 @@ body,
 }
 
 .ids .ids__hero-header h1 {
-  font-size: 4.05cqw;
+  font-size: 2.18em;
   letter-spacing: -0.035em;
   line-height: 0.966;
 }
