@@ -1,0 +1,182 @@
+/* Страница type/: шапка текстом + крупная сетка леттерингов.
+   База та же, что у главной и CV (akt.css), порядок импортов = порядок каскада.
+   Правила с префиксом .ids — по той же причине, что в cv/ и alchemy/. */
+@import './colors.css';
+@import './reset.css';
+@import './settings.css';
+@import './layout.css';
+@import './ids.css';
+@import './akt.css';
+
+/* Шапка: рецепт hero с главной, только без фото — заголовок, подпись, контакты */
+.ids .type-head {
+  max-width: 24.9em;
+  /* в layout.css у всех <header> поля — здесь шапка встаёт по краю сетки */
+  padding: 0;
+}
+
+.ids .type-head h1 {
+  font-size: 2.18em;
+  letter-spacing: -0.035em;
+  line-height: 0.966;
+  margin: 0;
+}
+
+.ids .type-head .ids__text-meta {
+  margin: 0.9em 0 0;
+  font-size: 1.15em;
+  line-height: 1.15;
+}
+
+.ids .type-contacts {
+  margin-top: 0.9em;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.6em 1em;
+}
+
+.ids .type-contacts a {
+  font-size: 1.15em;
+  letter-spacing: -0.02em;
+}
+
+@supports (text-box: trim-start cap alphabetic) {
+  .ids .type-head h1 {
+    text-box: trim-start cap alphabetic;
+  }
+}
+
+@media (width < 768px) {
+  .ids .type-head {
+    max-width: none;
+  }
+
+  .ids .type-head h1 {
+    font-size: 2em;
+  }
+}
+
+/* Сетка работ: полосы во всю ширину. Модуль --u — 1/48 ширины колонки (на телефоне 1/30).
+   Каждая работа стоит по своим --x/--y и имеет свой размер --w × --h — это размер самих
+   букв (картинки обрезаны по буквам), у чёрных — размер прямоугольника. --s — масштаб
+   полосы (им же масштабируются поля чёрных прямоугольников). Буквы у большинства одной
+   высоты, расстояние между буквами соседних работ одинаковое. */
+.ids .type-board {
+  container-type: inline-size;
+}
+
+.ids .type-free {
+  --u: calc(100cqw / 48);
+  position: relative;
+  height: calc(var(--rows) * var(--u));
+}
+
+.ids .t {
+  position: absolute;
+  left: calc(var(--x) * var(--u));
+  top: calc(var(--y) * var(--u));
+  width: calc(var(--w) * var(--u));
+  height: calc(var(--h) * var(--u));
+  margin: 0;
+  box-sizing: border-box;
+
+  & > img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+}
+
+/* Буквы в чёрном прямоугольнике с полями (bachelor party) */
+.ids .t--black {
+  padding: calc(1.95 * var(--s, 1) * var(--u));
+  background-color: #000;
+}
+
+/* Рендеры и фото со своим чёрным фоном — картинка целиком */
+.ids .t--dark {
+  overflow: hidden;
+  background-color: #000;
+
+  & > img {
+    object-fit: cover;
+  }
+}
+
+/* Скругление — как у работ в кейсе Alchemy. ids__rounded не подходит:
+   akt.css гасит его по всему сайту */
+.ids .t--round {
+  border-radius: calc(var(--ids__radius) / 2);
+  corner-shape: squircle;
+}
+
+/* Леттеринги Alchemy: каждый в своём чёрном прямоугольнике с полями,
+   стоящие рядом прямоугольники сливаются в одну чёрную форму (без зазоров,
+   по центру по высоте — где буквы разной высоты, получаются ступеньки) */
+.ids .t--set {
+  display: flex;
+  align-items: center;
+}
+
+.ids .t-box {
+  display: block;
+  padding: calc(1.5 * var(--s, 1) * var(--u));
+  background-color: #000;
+
+  & > img {
+    display: block;
+    width: calc(var(--iw) * var(--s, 1) * var(--u));
+    height: auto;
+  }
+}
+
+/* Чёрная панель с работами внутри: работы стоят в % от панели,
+   поэтому панель целиком масштабируется и на телефоне */
+.ids .t-panel {
+  border-radius: calc(var(--u) / 2);
+  background-color: #000;
+
+  & > img {
+    position: absolute;
+    left: var(--l);
+    top: var(--t);
+    width: var(--iw);
+    height: auto;
+  }
+}
+
+/* чёрная SVG на чёрной панели — белым */
+.ids .t-inv {
+  filter: invert(1);
+}
+
+/* Телефон: поток с выключкой по центру, модуль крупнее */
+@media (width < 768px) {
+  .ids .type-free {
+    --u: calc(100cqw / 30);
+    height: auto;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: calc(2 * var(--u));
+  }
+
+  /* широкие работы — не шире колонки, пропорции сохраняются */
+  .ids .t {
+    position: static;
+    width: calc(var(--w) * var(--u));
+    max-width: 100%;
+    height: auto;
+    aspect-ratio: var(--w) / var(--h);
+  }
+
+  /* relative — чтобы работы внутри держались за панель; координаты на сетке сбрасываем */
+  .ids .t-panel {
+    position: relative;
+    left: auto;
+    top: auto;
+  }
+}

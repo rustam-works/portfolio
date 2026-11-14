@@ -16,7 +16,8 @@ export default defineConfig({
         cv: resolve(__dirname, 'cv/index.html'),
         notFound: resolve(__dirname, '404.html'),
         alchemy: resolve(__dirname, 'alchemy/index.html'),
-        privacy: resolve(__dirname, 'pinterest-mcp-privacy/index.html')
+        privacy: resolve(__dirname, 'pinterest-mcp-privacy/index.html'),
+        type: resolve(__dirname, 'type/index.html')
       }
     }
   }
