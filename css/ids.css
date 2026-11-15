@@ -60,7 +60,7 @@
 
   & p {
     margin-top: 0;
-    font-size: 0.9em;
+    font-size: var(--ids__fs-body);
     margin-bottom: calc(var(--ids__density) * 0.4em);
 
     &.loud {

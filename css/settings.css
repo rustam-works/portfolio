@@ -22,6 +22,19 @@ body {
 :root {
   --ids__density: 1.3;
   --ids__radius: 1.5em;
+
+  /* Шкала кеглей — пять ступеней, в долях базового. Все страницы берут размеры отсюда;
+     подбирать значения удобно на /scale/ (страница только для разработки).
+     Единица — rem: размер считается от корня, поэтому вложенность блоков его не умножает
+     (в em 0.9 внутри 0.8 давало бы 0.72). Плавающий кегль задан на html — rem плавает с ним. */
+  --ids__fs-small: 0.8rem; /* мелочь: подписи, сноски, фильтры */
+  --ids__fs-body: 1rem;   /* основной текст */
+  --ids__fs-lead: 1.15rem;  /* лид: подпись под заголовком, контакты, малые заголовки */
+  --ids__fs-sub: 1.4rem;    /* младшие заголовки: названия кейсов */
+  --ids__fs-head: 2.2rem;     /* заголовки: h1, цифры фактоидов */
+
+  /* Множитель базового кегля (вместе с ним растут и отступы в em) */
+  --ids__fs-base: 0.9;
 }
 
 body {
@@ -43,18 +56,18 @@ html {
   --mobile-desktop-breakpoint: 768;
   --desktop-viewport-max: 1500;
 
-  font-size: calc(var(--mobile-font-size-min) * 1px);
+  font-size: calc((var(--mobile-font-size-min) * 1px) * var(--ids__fs-base));
 
   @media screen and (min-width: 320px) {
-    font-size: calc(var(--mobile-font-size-min) * 1px + (var(--mobile-font-size-max) - var(--mobile-font-size-min)) * ((100vw - var(--mobile-viewport-min) * 1px) / (var(--mobile-desktop-breakpoint) - var(--mobile-viewport-min))));
+    font-size: calc((var(--mobile-font-size-min) * 1px + (var(--mobile-font-size-max) - var(--mobile-font-size-min)) * ((100vw - var(--mobile-viewport-min) * 1px) / (var(--mobile-desktop-breakpoint) - var(--mobile-viewport-min)))) * var(--ids__fs-base));
   }
 
   @media screen and (min-width: 768px) {
-    font-size: calc(var(--desktop-font-size-min) * 1px + (var(--desktop-font-size-max) - var(--desktop-font-size-min)) * ((100vw - var(--mobile-desktop-breakpoint) * 1px) / (var(--desktop-viewport-max) - var(--mobile-desktop-breakpoint))));
+    font-size: calc((var(--desktop-font-size-min) * 1px + (var(--desktop-font-size-max) - var(--desktop-font-size-min)) * ((100vw - var(--mobile-desktop-breakpoint) * 1px) / (var(--desktop-viewport-max) - var(--mobile-desktop-breakpoint)))) * var(--ids__fs-base));
   }
 
   @media screen and (min-width: 1500px) {
-    font-size: calc(var(--desktop-font-size-max) * 1px);
+    font-size: calc((var(--desktop-font-size-max) * 1px) * var(--ids__fs-base));
   }
 
 

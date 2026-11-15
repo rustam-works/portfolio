@@ -76,19 +76,22 @@ body,
   max-width: 24.9em;
 }
 
-.ids .ids__hero-header .ids__text-constrained {
-  max-width: none;
+/* Ширина заголовка в его собственном кегле: 24.9 / 2.18 — та же длина строки
+   в знаках, что была при кегле 2.18em во всю колонку, переносы не меняются */
+.ids .ids__hero-header .ids__text-constrained,
+.ids .ids__hero-header h1 {
+  max-width: 11.42em;
 }
 
 .ids .ids__hero-header h1 {
-  font-size: 2.18em;
+  font-size: var(--ids__fs-head);
   letter-spacing: -0.035em;
   line-height: 0.966;
 }
 
 .ids .ids__hero-header .ids__text-meta {
   margin-bottom: 0;
-  font-size: 1.15em;
+  font-size: var(--ids__fs-lead);
   line-height: 1;
 }
 
@@ -109,12 +112,10 @@ body,
     object-position: center;
   }
 
-  .ids .ids__hero-header .ids__text-width {
-    max-width: none;
-  }
-
+  .ids .ids__hero-header .ids__text-width,
+  .ids .ids__hero-header .ids__text-constrained,
   .ids .ids__hero-header h1 {
-    font-size: 2em;
+    max-width: none;
   }
 }
 

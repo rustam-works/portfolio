@@ -43,6 +43,16 @@ picture > source {
     padding: 0 calc(var(--ids__density) * 0.6em);
   }
 
+  /* Узкий этаж — лист образцов (type/): буквам нужен воздух по бокам.
+     60% экрана, но не уже 820px, чтобы на ноутбуке мелкие работы не терялись. */
+  &.S {
+    width: min(90%, max(60%, 820px));
+
+    @media (width < 768px) {
+      width: 100%;
+    }
+  }
+
   &.L {
     width: 90%;
 
@@ -299,14 +309,14 @@ footer {
 
 /* Кейсы — h2 по смыслу (раздел страницы), но с прежним размером h3 */
 .ids h2.case-study__title {
-  font-size: 1.5em;
+  font-size: var(--ids__fs-sub);
   font-weight: 600;
   line-height: calc(var(--ids__density) / 1.1);
 }
 
 /* Малые кейсы (Гёте, значки) — h3 по смыслу, с прежним размером h4 */
 .ids h3.case-study__title {
-  font-size: 1.1em;
+  font-size: var(--ids__fs-lead);
   line-height: var(--ids__density);
   /* Удерживаем строку в комфортной длине */
   max-width: 42ch;
@@ -356,7 +366,7 @@ footer {
 }
 
 .case-study__stat-value {
-  font-size: 2em;
+  font-size: var(--ids__fs-head);
   font-weight: 600;
   /* Тот же вес, что у заголовков кейсов: иерархию делает размер, а не вес */
   letter-spacing: -0.03em;
@@ -391,7 +401,7 @@ footer {
 }
 
 .ids .contacts__link {
-  font-size: 1.25em;
+  font-size: var(--ids__fs-lead);
   font-weight: 400;
   letter-spacing: -0.02em;
   line-height: calc(var(--ids__density) / 1.2);
@@ -529,10 +539,63 @@ footer {
 
 /* Footnote */
 .ids__footnote {
-  font-size: 0.75em;
+  font-size: var(--ids__fs-small);
   font-weight: 500;
   /* Компенсация малого кегля, как у лейблов фактоидов */
   margin: 0;
+}
+
+/* Копирайт — последней строкой страницы, под всеми блоками: слева имя, справа знак из иконки
+   сайта. Строка — flex с выравниванием по базовой линии, поэтому знак донышком стоит на
+   базовой линии текста при любом кегле.
+   Знак вписан в разметку, а не картинкой: favicon.svg в тёмной теме системы белый,
+   на белой странице пропал бы. */
+.ids .ids__colophon {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin: 0;
+}
+
+.ids .ids__colophon-mark {
+  flex: none;
+  height: 1.3rem;
+  width: auto;
+  fill: rgb(var(--ids__text-RGB));
+}
+
+/* Строка копирайта считает ширину от 100vw, а в 100vw входит полоса прокрутки (там, где она
+   занимает место) — без этого появилась бы горизонтальная прокрутка на её ширину */
+.ids main {
+  overflow-x: clip;
+}
+
+/* Телефон: знак ближе к краю экрана, чем текст (у колонки поле 0.6em × плотность) */
+@media (width < 768px) {
+  .ids .ids__wrapper > .ids__colophon {
+    margin-right: calc(0.5rem - var(--ids__density) * 0.6rem);
+  }
+}
+
+/* Десктоп: строка выходит из колонки на всю ширину экрана. Слева поле как у ссылки назад
+   на type/, справа меньше — знак стоит в самом углу. */
+@media (width >= 768px) {
+  .ids .ids__wrapper > .ids__colophon {
+    --pad-left: calc(var(--ids__density) * 0.75rem);
+    --pad-right: 0.5rem;
+    position: relative;
+    left: calc((100% - 100vw) / 2 + var(--pad-left));
+    width: calc(100vw - var(--pad-left) - var(--pad-right));
+    white-space: nowrap;
+  }
+}
+
+/* CV на телефоне: текст пунктов — мелкая ступень шкалы, как сноски
+   (правило здесь, а не в стилях CV: layout.css подключён у любой версии страницы) */
+@media (width < 768px) {
+  .ids .cv-item__body p {
+    font-size: var(--ids__fs-small);
+  }
 }
 
 /* Атрибуция Aurora — 3-я колонка грида (на месте фактоидов).
@@ -650,12 +713,6 @@ footer {
   .case-study__description {
     max-width: none;
     padding-top: 0;
-  }
-
-  /* Текст кейсов на телефоне мельче (.ids p задаёт 0.9em и перебивает просто класс);
-     абзац в контактах не трогаем */
-  .ids :not(.contacts__text) > .case-study__description {
-    font-size: 0.8em;
   }
 
   .case-study__stats {

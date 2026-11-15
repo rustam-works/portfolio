@@ -8,6 +8,28 @@
 @import './ids.css';
 @import './akt.css';
 
+/* Ссылка назад. На узком экране — строкой над шапкой (отступы как у этажей S и M).
+   От 1200px выходит из колонки на левое поле страницы, вровень с верхом заголовка; отступ сверху — этаж S, как у hero на главной:
+   поле там не уже 190px, ссылка помещается. */
+.ids .type-back {
+  padding: calc(var(--ids__density) * 0.7em) 0 calc(var(--ids__density) * 1.4em);
+}
+
+@media (width >= 1200px) {
+  .ids .type-back {
+    position: absolute;
+    top: calc(var(--ids__density) * 0.7em);
+    /* левый край страницы с тем же полем, что у этажа XL */
+    left: calc((100% - 100vw) / 2 + var(--ids__density) * 0.75rem);
+    padding: 0;
+  }
+
+  /* header. — чтобы перебить общий padding: 0 шапки ниже по файлу */
+  .ids header.type-head {
+    padding-top: calc(var(--ids__density) * 0.7em);
+  }
+}
+
 /* Шапка: рецепт hero с главной, только без фото — заголовок, подпись, контакты */
 .ids .type-head {
   max-width: 24.9em;
@@ -16,15 +38,34 @@
 }
 
 .ids .type-head h1 {
-  font-size: 2.18em;
+  font-size: var(--ids__fs-head);
   letter-spacing: -0.035em;
   line-height: 0.966;
   margin: 0;
 }
 
+/* Имя того же веса, что весь заголовок — как в hero на главной и в CV
+   (без этого strong берёт 600 из ids.css и выходит светлее остального) */
+.ids .type-head h1 strong {
+  font-weight: 700;
+}
+
+/* Нижний CTA — та же подпись и контакты, что в шапке, без заголовка */
+.ids .type-foot {
+  /* шире шапки: текст короче, встаёт в две строки */
+  max-width: 30em;
+  padding: 0;
+}
+
+.ids .type-foot .ids__text-meta {
+  margin: 0;
+  font-size: var(--ids__fs-lead);
+  line-height: 1.15;
+}
+
 .ids .type-head .ids__text-meta {
   margin: 0.9em 0 0;
-  font-size: 1.15em;
+  font-size: var(--ids__fs-lead);
   line-height: 1.15;
 }
 
@@ -37,8 +78,14 @@
 }
 
 .ids .type-contacts a {
-  font-size: 1.15em;
+  font-size: var(--ids__fs-lead);
   letter-spacing: -0.02em;
+}
+
+/* Ровный правый край: строки подписи выравниваются по длине */
+.ids .type-head .ids__text-meta,
+.ids .type-foot .ids__text-meta {
+  text-wrap: balance;
 }
 
 @supports (text-box: trim-start cap alphabetic) {
@@ -48,12 +95,9 @@
 }
 
 @media (width < 768px) {
-  .ids .type-head {
+  .ids .type-head,
+  .ids .type-foot {
     max-width: none;
-  }
-
-  .ids .type-head h1 {
-    font-size: 2em;
   }
 }
 
@@ -135,7 +179,9 @@
 /* Чёрная панель с работами внутри: работы стоят в % от панели,
    поэтому панель целиком масштабируется и на телефоне */
 .ids .t-panel {
-  border-radius: calc(var(--u) / 2);
+  /* скругление — как у работ Alchemy: половина --ids__radius, сквиркл */
+  border-radius: calc(var(--ids__radius) / 2);
+  corner-shape: squircle;
   background-color: #000;
 
   & > img {

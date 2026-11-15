@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ru">
+<!-- Страница только для разработки: подбор шкалы кеглей. В сборку не входит
+     (её нет в rollupOptions.input), на сайт не попадает.
+     Ползунки сразу записывают переменные --ids__fs-* в css/settings.css (через dev-сервер,
+     плагин scaleTuner в vite.config.js) — меняется сам сайт, во всех открытых вкладках. -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Шкала кеглей</title>
+<style>
+  :root { --bg: #fff; --fg: #000; --line: #000; --panel: #f0f0f0; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { display: flex; flex-direction: column; background: var(--bg); color: var(--fg);
+         font: 13px/1.3 -apple-system, system-ui, sans-serif; }
+  .bar { flex: none; display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: flex-end;
+         padding: 10px 14px; border-bottom: 1px solid var(--line); }
+  .ctl { display: grid; grid-template-columns: auto 58px; gap: 2px 8px; align-items: center; }
+  .ctl label { grid-column: 1 / -1; font-weight: 600; }
+  .ctl small { font-weight: 400; }
+  .ctl input[type=range] { width: 150px; margin: 0; accent-color: #000; }
+  .ctl input[type=number] { width: 58px; font: inherit; padding: 2px 4px; border: 1px solid var(--line);
+         border-radius: 0; font-variant-numeric: tabular-nums; }
+  .ctl .px { grid-column: 1 / -1; font-variant-numeric: tabular-nums; }
+  .group { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  button, select { font: inherit; padding: 4px 9px; border: 1px solid var(--line); background: var(--bg);
+         color: var(--fg); border-radius: 0; cursor: pointer; }
+  button[aria-pressed=true] { background: var(--fg); color: var(--bg); }
+  .side { display: flex; flex-direction: column; gap: 6px; margin-left: auto; }
+  #css { font: 12px/1.35 ui-monospace, Menlo, monospace; white-space: pre; background: var(--panel);
+         padding: 6px 8px; margin: 0; user-select: all; }
+  .stage { flex: 1; min-height: 0; display: flex; gap: 14px; padding: 14px; overflow-x: auto; background: var(--panel); }
+  .col { flex: none; display: flex; flex-direction: column; gap: 6px; height: 100%; }
+  .col h2 { margin: 0; font-size: 13px; font-weight: 600; }
+  .col h2 a { color: inherit; }
+  .frame { flex: 1; min-height: 0; position: relative; overflow: hidden; background: #fff; }
+  .frame iframe { position: absolute; left: 0; top: 0; border: 0; transform-origin: 0 0; background: #fff; }
+</style>
+</head>
+<body>
+<div class="bar">
+  <div id="ctls" class="group" style="gap: 10px 22px; align-items: flex-end"></div>
+  <div class="side">
+    <div class="group">
+      <span>Экран</span>
+      <button data-vw="1440" aria-pressed="true">1440</button>
+      <button data-vw="1100" aria-pressed="false">1100</button>
+      <button data-vw="390" aria-pressed="false">390</button>
+      <span style="margin-left: 10px">Масштаб</span>
+      <input id="zoom" type="range" min="0.2" max="1" step="0.05" value="0.4" style="width: 110px; accent-color: #000">
+      <span id="zoomv"></span>
+    </div>
+    <div class="group">
+      <button id="reset">Исходные: 0.75 / 0.9 / 1.15 / 1.5 / 2</button>
+      <button id="modulate">Как в Modulate: 0.8 / 1 / 1.15 / 1.4 / 2, база ×0.9</button>
+      <button id="four">Четыре ступени: 0.75 / 1 / 1.5 / 2</button>
+      <button id="copy">Скопировать CSS</button>
+    </div>
+    <div id="status" aria-live="polite"></div>
+  </div>
+  <pre id="css"></pre>
+</div>
+<div class="stage" id="stage"></div>
+
+<script>
+// Ступени: [переменная, подпись, что это на сайте, значение по умолчанию]
+const TOKENS = [
+  ['small', 'Мелочь', 'подписи, сноски, фильтры', 0.75],
+  ['body',  'Основной текст', 'описания, абзацы', 0.9],
+  ['lead',  'Лид', 'под заголовком, контакты, h3', 1.15],
+  ['sub',   'Младшие заголовки', 'названия кейсов', 1.5],
+  ['head',  'Заголовки', 'h1, цифры', 2],
+  ['base',  'Базовый кегль ×', 'множитель всего, с отступами', 1],
+]
+const PAGES = [['Главная', '/'], ['Леттеринги', '/type/'], ['Вывески', '/uz-signs/'], ['CV', '/cv/'], ['Alchemy', '/alchemy/']]
+
+const defaults = Object.fromEntries(TOKENS.map(t => [t[0], t[3]]))
+let state = { ...defaults }, vw = 1440, zoom = 0.4
+
+// Источник правды — settings.css: читаем значения оттуда и туда же пишем
+const status = document.getElementById('status')
+let saveTimer
+function save() {
+  clearTimeout(saveTimer)
+  status.textContent = 'записываю…'
+  saveTimer = setTimeout(async () => {
+    try {
+      const r = await fetch('/__scale', { method: 'POST', body: JSON.stringify(state) })
+      if (!r.ok) throw new Error()
+      status.textContent = 'записано в settings.css'
+    } catch { status.textContent = 'не записалось: нужен dev-сервер' }
+  }, 250)
+}
+fetch('/__scale').then(r => r.json()).then(v => {
+  for (const k in v) if (isFinite(v[k])) state[k] = v[k]
+  render()
+  status.textContent = 'значения из settings.css'
+}).catch(() => { status.textContent = 'нет связи с dev-сервером' })
+
+const ctls = document.getElementById('ctls'), stage = document.getElementById('stage')
+const inputs = {}
+
+for (const [id, name, hint] of TOKENS) {
+  const el = document.createElement('div'); el.className = 'ctl'
+  const max = id === 'base' ? 1.5 : 3, min = id === 'base' ? 0.7 : 0.5
+  el.innerHTML = `<label>${name} <small>— ${hint}</small></label>
+    <input type="range" min="${min}" max="${max}" step="0.01">
+    <input type="number" min="${min}" max="${max}" step="0.01">
+    <span class="px"></span>`
+  const [r, n] = el.querySelectorAll('input')
+  inputs[id] = { r, n, px: el.querySelector('.px') }
+  const set = v => { v = parseFloat(v); if (!isFinite(v)) return; state[id] = v; render(); save() }
+  r.addEventListener('input', () => set(r.value))
+  n.addEventListener('input', () => set(n.value))
+  ctls.append(el)
+}
+
+const frames = PAGES.map(([title, url]) => {
+  const col = document.createElement('div'); col.className = 'col'
+  col.innerHTML = `<h2><a href="${url}" target="_blank" rel="noopener">${title}</a></h2><div class="frame"><iframe src="${url}" title="${title}"></iframe></div>`
+  stage.append(col)
+  const f = col.querySelector('iframe')
+  f.addEventListener('load', () => apply(f))
+  return { col, f, box: col.querySelector('.frame') }
+})
+
+// Значения пишутся инлайном на <html> страницы-превью — это перебивает :root из settings.css
+function apply(f) {
+  let root
+  try { root = f.contentDocument && f.contentDocument.documentElement } catch { return }
+  if (!root) return
+  for (const [id] of TOKENS)
+    root.style.setProperty('--ids__fs-' + id, id === 'base' ? String(state[id]) : state[id] + 'rem')
+}
+
+function layout() {
+  for (const { col, f, box } of frames) {
+    col.style.width = vw * zoom + 'px'
+    f.style.width = vw + 'px'
+    f.style.height = box.clientHeight / zoom + 'px'
+    f.style.transform = `scale(${zoom})`
+  }
+  document.getElementById('zoomv').textContent = Math.round(zoom * 100) + '%'
+}
+
+// Базовый кегль берём из первой страницы-превью, чтобы показать размеры в пикселях
+function basePx() {
+  try { const d = frames[0].f.contentDocument; return parseFloat(getComputedStyle(d.documentElement).fontSize) * state.base } catch { return NaN }
+}
+
+function render() {
+  const b = basePx()
+  for (const [id] of TOKENS) {
+    const { r, n, px } = inputs[id]
+    if (document.activeElement !== r) r.value = state[id]
+    if (document.activeElement !== n) n.value = state[id]
+    px.textContent = isFinite(b) ? (id === 'base' ? b.toFixed(1) + ' px — базовый' : (state[id] * b).toFixed(1) + ' px') : ''
+  }
+  frames.forEach(({ f }) => apply(f))
+  document.getElementById('css').textContent = TOKENS.map(([id]) =>
+    `--ids__fs-${id}: ${id === 'base' ? state[id] : state[id] + 'rem'};`).join('\n')
+}
+
+document.querySelectorAll('[data-vw]').forEach(btn => btn.addEventListener('click', () => {
+  vw = +btn.dataset.vw
+  document.querySelectorAll('[data-vw]').forEach(x => x.setAttribute('aria-pressed', x === btn))
+  layout(); setTimeout(render, 300)
+}))
+document.getElementById('zoom').addEventListener('input', e => { zoom = +e.target.value; layout() })
+document.getElementById('reset').addEventListener('click', () => { state = { ...defaults }; render(); save() })
+document.getElementById('modulate').addEventListener('click', () => { state = { small: 0.8, body: 1, lead: 1.15, sub: 1.4, head: 2, base: 0.9 }; render(); save() })
+document.getElementById('four').addEventListener('click', () => { state = { ...state, small: 0.75, body: 1, lead: 1, sub: 1.5, head: 2 }; render(); save() })
+document.getElementById('copy').addEventListener('click', async e => {
+  try { await navigator.clipboard.writeText(document.getElementById('css').textContent); e.target.textContent = 'Скопировано' }
+  catch { e.target.textContent = 'Выдели текст справа' }
+  setTimeout(() => e.target.textContent = 'Скопировать CSS', 1500)
+})
+addEventListener('resize', layout)
+frames[0].f.addEventListener('load', () => setTimeout(render, 200))
+layout(); render()
+</script>
+</body>
+</html>
